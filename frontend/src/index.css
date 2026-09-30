@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-marca-50: #f0fdfa;
+  --color-marca-100: #ccfbf1;
+  --color-marca-600: #0d9488;
+  --color-marca-700: #0f766e;
+  --color-marca-800: #115e59;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+  /* Evita el zoom por doble toque en botones: en caja se toca rápido y seguido. */
+  touch-action: manipulation;
+}

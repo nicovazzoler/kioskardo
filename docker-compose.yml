@@ -1,0 +1,15 @@
+# Postgres para desarrollo. Opcional si ya tenés uno instalado.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: kioskardo
+      POSTGRES_PASSWORD: kioskardo
+      POSTGRES_DB: kioskardo
+    ports:
+      - "5432:5432"
+    volumes:
+      - datos_db:/var/lib/postgresql/data
+
+volumes:
+  datos_db:
