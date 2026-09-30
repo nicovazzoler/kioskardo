@@ -2,6 +2,8 @@
 
 Punto de venta para kioscos. Funciona en celular, tablet y PC como PWA (web instalable).
 
+Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
+
 ## Estructura
 
 ```
