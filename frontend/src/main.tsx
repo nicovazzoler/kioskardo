@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { AppLayout } from './layouts/AppLayout'
+import { iniciarSincronizacion } from './lib/sincronizacion'
 import { CajaPage } from './pages/CajaPage'
 import { InventarioPage } from './pages/InventarioPage'
 import { PantallaClientePage } from './pages/PantallaClientePage'
@@ -20,6 +21,8 @@ const router = createBrowserRouter([
   // Fuera del layout: la pantalla del cliente no lleva menú.
   { path: '/pantalla', element: <PantallaClientePage /> },
 ])
+
+iniciarSincronizacion()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

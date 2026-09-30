@@ -6,9 +6,7 @@ export type MotivoStock = 'compra' | 'venta' | 'ajuste' | 'merma'
 export type MedioPago = 'efectivo' | 'debito' | 'credito' | 'transferencia' | 'qr'
 export type TipoMovimientoCaja = 'ingreso' | 'egreso'
 
-export interface Producto {
-  id: string
-  kiosko_id: string
+export interface ProductoGuardar {
   codigo_barras: string | null
   nombre: string
   precio_venta: number
@@ -16,6 +14,19 @@ export interface Producto {
   unidad: Unidad
   stock_minimo: number
   activo: boolean
+}
+
+export interface Producto extends ProductoGuardar {
+  id: string
+  // Suma de todos los movimientos de stock; lo calcula el backend.
+  stock: number
+}
+
+export interface MovimientoStockCrear {
+  id: string
+  // compra y merma: cuánto entra o sale. ajuste: el stock real contado.
+  motivo: 'compra' | 'merma' | 'ajuste'
+  cantidad: number
 }
 
 export interface MovimientoStock {
