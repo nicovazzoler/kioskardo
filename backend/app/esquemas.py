@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.modelos import Unidad
+from app.modelos import MedioPago, Unidad
 
 Centavos = Annotated[int, Field(ge=0)]
 Cantidad = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
@@ -59,3 +60,104 @@ class MovimientoStockCrear(BaseModel):
     id: uuid.UUID
     motivo: Literal["compra", "merma", "ajuste"]
     cantidad: Cantidad
+
+
+class CajaAbrir(BaseModel):
+    monto_inicial: Centavos
+    # Viene del cliente: si se abrió sin conexión, la hora real es la del dispositivo.
+    abierta_en: datetime | None = None
+
+
+class CajaLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    abierta_en: datetime
+    cerrada_en: datetime | None
+    monto_inicial: int
+    monto_contado: int | None
+
+
+class VentaItemCrear(BaseModel):
+    id: uuid.UUID
+    producto_id: uuid.UUID | None
+    nombre: str = Field(min_length=1, max_length=200)
+    precio_unitario: Centavos
+    cantidad: Annotated[Decimal, Field(gt=0, max_digits=12, decimal_places=3)]
+    subtotal: Centavos
+
+    @model_validator(mode="after")
+    def subtotal_coherente(self) -> Self:
+        # La cantidad se redondea a gramos, así que "$500 de caramelos" puede no dar exacto:
+        # se tolera la diferencia de medio gramo más un centavo de redondeo.
+        exacto = self.precio_unitario * self.cantidad
+        tolerancia = self.precio_unitario * Decimal("0.0005") + 1
+        if abs(self.subtotal - exacto) > tolerancia:
+            raise ValueError(f"El subtotal de '{self.nombre}' no coincide con precio × cantidad")
+        return self
+
+
+class VentaPagoCrear(BaseModel):
+    id: uuid.UUID
+    medio: MedioPago
+    monto: Annotated[int, Field(gt=0)]
+    recibido: Centavos | None = None
+
+    @model_validator(mode="after")
+    def recibido_solo_en_efectivo(self) -> Self:
+        if self.recibido is not None:
+            if self.medio != MedioPago.EFECTIVO:
+                raise ValueError("Solo los pagos en efectivo llevan monto recibido")
+            if self.recibido < self.monto:
+                raise ValueError("El monto recibido no alcanza")
+        return self
+
+
+class VentaCrear(BaseModel):
+    caja_id: uuid.UUID
+    creado_en: datetime
+    items: list[VentaItemCrear] = Field(min_length=1)
+    pagos: list[VentaPagoCrear] = Field(min_length=1)
+
+    @property
+    def total(self) -> int:
+        return sum(item.subtotal for item in self.items)
+
+    @model_validator(mode="after")
+    def pagos_cubren_el_total(self) -> Self:
+        pagado = sum(pago.monto for pago in self.pagos)
+        if pagado != self.total:
+            raise ValueError(f"Los pagos suman {pagado} y el total es {self.total}")
+        return self
+
+
+class VentaItemLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    producto_id: uuid.UUID | None
+    nombre: str
+    precio_unitario: int
+    cantidad: float
+    subtotal: int
+
+
+class VentaPagoLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    medio: MedioPago
+    monto: int
+    recibido: int | None
+
+
+class VentaLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    caja_id: uuid.UUID
+    total: int
+    anulada: bool
+    creado_en: datetime
+    items: list[VentaItemLeer]
+    pagos: list[VentaPagoLeer]

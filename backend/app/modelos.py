@@ -153,11 +153,13 @@ class Venta(Base):
     kiosko_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("kioskos.id"))
     caja_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cajas.id"), index=True)
     total: Mapped[int] = mapped_column(BigInteger)
-    medio_pago: Mapped[MedioPago] = mapped_column(columna_enum(MedioPago))
     anulada: Mapped[bool] = mapped_column(default=False)
     creado_en: Mapped[datetime] = columna_creado_en()
 
     items: Mapped[list["VentaItem"]] = relationship(
+        back_populates="venta", cascade="all, delete-orphan"
+    )
+    pagos: Mapped[list["VentaPago"]] = relationship(
         back_populates="venta", cascade="all, delete-orphan"
     )
 
@@ -169,7 +171,8 @@ class VentaItem(Base):
     venta_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("ventas.id", ondelete="CASCADE"), index=True
     )
-    producto_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("productos.id"))
+    # None en los ítems "Varios": un monto libre que no sale del inventario.
+    producto_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("productos.id"))
     # Copia del nombre y precio al vender: si el producto cambia después, la venta queda como fue.
     nombre: Mapped[str] = mapped_column(String(200))
     precio_unitario: Mapped[int] = mapped_column(BigInteger)
@@ -177,6 +180,25 @@ class VentaItem(Base):
     subtotal: Mapped[int] = mapped_column(BigInteger)
 
     venta: Mapped[Venta] = relationship(back_populates="items")
+
+
+class VentaPago(Base):
+    """Una venta puede pagarse con más de un medio (ej: parte efectivo, parte transferencia)."""
+
+    __tablename__ = "venta_pagos"
+    __table_args__ = (CheckConstraint("monto > 0", name="monto_positivo"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    venta_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("ventas.id", ondelete="CASCADE"), index=True
+    )
+    medio: Mapped[MedioPago] = mapped_column(columna_enum(MedioPago))
+    # Lo que se aplica a la venta. En efectivo puede diferir de lo que entregó el cliente.
+    monto: Mapped[int] = mapped_column(BigInteger)
+    # Solo efectivo: con cuánto pagó el cliente, para calcular e imprimir el vuelto.
+    recibido: Mapped[int | None] = mapped_column(BigInteger)
+
+    venta: Mapped[Venta] = relationship(back_populates="pagos")
 
 
 class MovimientoCaja(Base):

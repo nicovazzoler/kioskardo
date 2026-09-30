@@ -12,3 +12,8 @@ const formateador = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 3 })
 export function formatearCantidad(cantidad: number, unidad: Unidad): string {
   return unidad === 'kg' ? `${formateador.format(cantidad)} kg` : formateador.format(cantidad)
 }
+
+// Redondeo a 3 decimales: en kg, 0.1 + 0.2 daría 0.30000000000000004.
+export function redondearGramos(cantidad: number): number {
+  return Math.round(cantidad * 1000) / 1000
+}

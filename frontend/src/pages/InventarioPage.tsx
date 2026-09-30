@@ -57,7 +57,7 @@ export function InventarioPage() {
   }
 
   return (
-    <section className="mx-auto max-w-4xl">
+    <section className="mx-auto max-w-4xl p-4 md:p-6">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Inventario</h1>
         <button

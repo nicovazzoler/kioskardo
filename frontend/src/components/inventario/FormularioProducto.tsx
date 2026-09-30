@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode, type Ref } from 'react'
+import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { parsearCantidad } from '../../lib/cantidad'
 import { centavosATexto, formatearPesos, parsearPesos } from '../../lib/dinero'
 import { db } from '../../lib/db'
@@ -7,8 +7,10 @@ import type { Producto, Unidad } from '../../lib/modelos'
 import { buscarPorCodigo, guardarProducto, moverStock } from '../../lib/productos'
 import { nuevoId } from '../../lib/uuid'
 import { camaraDisponible } from '../../lib/camara'
+import { claseInput } from '../../lib/estilos'
 import { EscanerCamara } from '../EscanerCamara'
 import { Modal } from '../Modal'
+import { Campo, InputPesos } from '../Campos'
 import { AjusteStock } from './AjusteStock'
 
 interface Props {
@@ -16,7 +18,10 @@ interface Props {
   productoId?: string
   codigoInicial?: string
   alCerrar: () => void
-  alEditarOtro: (producto: Producto) => void
+  alEditarOtro?: (producto: Producto) => void
+  // Si está, se llama al terminar un alta con el id nuevo (ej: la venta lo agrega al carrito).
+  // En ese caso no se ofrece "Guardar y cargar otro".
+  alCrear?: (id: string) => void
 }
 
 interface Campos {
@@ -41,7 +46,7 @@ function camposDesde(producto: Producto | undefined, codigoInicial = ''): Campos
   }
 }
 
-export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEditarOtro }: Props) {
+export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEditarOtro, alCrear }: Props) {
   // useLiveQuery se re-ejecuta solo cuando cambian los datos en IndexedDB (ej: al ajustar stock).
   const producto = useLiveQuery(() => (productoId ? db.productos.get(productoId) : undefined), [productoId])
   const esAlta = !productoId
@@ -59,6 +64,7 @@ export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEdit
         codigoInicial={codigoInicial}
         alCerrar={alCerrar}
         alEditarOtro={alEditarOtro}
+        alCrear={alCrear}
       />
     </Modal>
   )
@@ -69,6 +75,7 @@ function Formulario({
   codigoInicial,
   alCerrar,
   alEditarOtro,
+  alCrear,
 }: Omit<Props, 'productoId'> & { producto?: Producto }) {
   const esAlta = !producto
   const [campos, setCampos] = useState(() => camposDesde(producto, codigoInicial))
@@ -128,6 +135,7 @@ function Formulario({
       await moverStock(guardado!, 'ajuste', stockInicial)
     }
 
+    if (esAlta) alCrear?.(id)
     if (!cargarOtro) return alCerrar()
     setUltimoGuardado(campos.nombre.trim())
     // Se conserva la unidad: al cargar mercadería suelen venir varios productos del mismo tipo.
@@ -169,9 +177,11 @@ function Formulario({
         {hayDuplicado && (
           <p className="mt-1 text-sm text-red-600">
             Ya existe: <strong>{duplicado.nombre}</strong>.{' '}
-            <button type="button" className="underline" onClick={() => alEditarOtro(duplicado)}>
-              Editar ese
-            </button>
+            {alEditarOtro && (
+              <button type="button" className="underline" onClick={() => alEditarOtro(duplicado)}>
+                Editar ese
+              </button>
+            )}
           </p>
         )}
       </Campo>
@@ -249,7 +259,7 @@ function Formulario({
           Guardar
         </button>
         {esAlta ? (
-          <button type="button" onClick={(e) => guardar(e, true)} className="flex-1 rounded-lg border border-marca-700 py-3 font-semibold text-marca-700">
+          !alCrear && <button type="button" onClick={(e) => guardar(e, true)} className="flex-1 rounded-lg border border-marca-700 py-3 font-semibold text-marca-700">
             Guardar y cargar otro
           </button>
         ) : (
@@ -270,40 +280,5 @@ function Formulario({
         />
       )}
     </form>
-  )
-}
-
-function claseInput(conError: boolean) {
-  return `w-full min-w-0 rounded-lg border px-3 py-2.5 text-base ${
-    conError ? 'border-red-400 bg-red-50' : 'border-slate-300'
-  }`
-}
-
-interface CampoProps {
-  etiqueta: string
-  error?: string | null
-  ayuda?: string
-  // Con varios botones adentro no se usa <label>: un click en la etiqueta "apretaría" el primer botón.
-  grupo?: boolean
-  children: ReactNode
-}
-
-function Campo({ etiqueta, error, ayuda, grupo, children }: CampoProps) {
-  const Contenedor = grupo ? 'div' : 'label'
-  return (
-    <Contenedor className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">{etiqueta}</span>
-      {children}
-      {error ? <span className="mt-1 block text-sm text-red-600">{error}</span> : ayuda && <span className="mt-1 block text-sm text-slate-500">{ayuda}</span>}
-    </Contenedor>
-  )
-}
-
-function InputPesos({ ref, valor, alCambiar, error }: { ref?: Ref<HTMLInputElement>; valor: string; alCambiar: (valor: string) => void; error: boolean }) {
-  return (
-    <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400">$</span>
-      <input ref={ref} value={valor} onChange={(e) => alCambiar(e.target.value)} inputMode="decimal" className={`${claseInput(error)} pl-7`} />
-    </div>
   )
 }

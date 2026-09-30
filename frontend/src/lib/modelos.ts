@@ -51,15 +51,24 @@ export interface Venta {
   id: string
   caja_id: string
   total: number
-  medio_pago: MedioPago
   anulada: boolean
   creado_en: string
   items: VentaItem[]
+  pagos: VentaPago[]
+}
+
+export interface VentaPago {
+  id: string
+  medio: MedioPago
+  monto: number
+  // Solo efectivo: con cuánto pagó el cliente.
+  recibido: number | null
 }
 
 export interface VentaItem {
   id: string
-  producto_id: string
+  // null en los ítems "Varios" (monto libre, sin producto).
+  producto_id: string | null
   // Nombre y precio copiados al momento de vender: si mañana cambia el precio, el ticket viejo no cambia.
   nombre: string
   precio_unitario: number

@@ -6,7 +6,7 @@ interface Props {
 
 export function Proximamente({ titulo, fase, descripcion }: Props) {
   return (
-    <section className="mx-auto max-w-2xl">
+    <section className="mx-auto max-w-2xl p-4 md:p-6">
       <h1 className="text-2xl font-bold">{titulo}</h1>
       <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-slate-600">
         <p className="text-sm font-semibold text-marca-700">Fase {fase}</p>
