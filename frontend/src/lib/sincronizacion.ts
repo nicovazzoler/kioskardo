@@ -1,6 +1,6 @@
 import { ErrorApi, pedirApi } from './api'
 import { db, type Pendiente } from './db'
-import type { Caja, Producto } from './modelos'
+import type { Caja, MovimientoCaja, Producto, Venta } from './modelos'
 
 const INTERVALO_MS = 15_000
 
@@ -57,7 +57,16 @@ async function bajarDatos() {
     pedirApi<Producto[]>('/productos'),
     pedirApi<Caja | null>('/cajas/abierta'),
   ])
-  await db.transaction('rw', db.productos, db.cajas, db.pendientes, async () => {
+  // Localmente se guardan solo las ventas y movimientos de la caja abierta.
+  const [ventas, movimientos] = caja
+    ? await Promise.all([
+        pedirApi<Venta[]>(`/cajas/${caja.id}/ventas`),
+        pedirApi<MovimientoCaja[]>(`/cajas/${caja.id}/movimientos`),
+      ])
+    : [[], []]
+
+  const tablas = [db.productos, db.cajas, db.ventas, db.movimientosCaja, db.pendientes]
+  await db.transaction('rw', tablas, async () => {
     // Si mientras bajaban los datos se hizo un cambio local, no se pisa: se baja en el próximo ciclo.
     if ((await db.pendientes.filter((p) => !p.error).count()) > 0) return
     await db.productos.clear()
@@ -65,6 +74,10 @@ async function bajarDatos() {
     // Localmente solo interesa la caja abierta; si se cerró en otro dispositivo, desaparece.
     await db.cajas.clear()
     if (caja) await db.cajas.put(caja)
+    await db.ventas.clear()
+    await db.ventas.bulkPut(ventas)
+    await db.movimientosCaja.clear()
+    await db.movimientosCaja.bulkPut(movimientos)
   })
 }
 

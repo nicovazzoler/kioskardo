@@ -38,6 +38,8 @@ class MotivoStock(enum.StrEnum):
     VENTA = "venta"
     AJUSTE = "ajuste"
     MERMA = "merma"
+    # Devuelve al stock lo que salió en una venta anulada.
+    ANULACION = "anulacion"
 
 
 class MedioPago(enum.StrEnum):

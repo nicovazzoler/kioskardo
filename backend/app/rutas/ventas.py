@@ -73,3 +73,32 @@ def registrar_venta(
     sesion.commit()
     sesion.refresh(venta)
     return venta
+
+
+@router.post("/{venta_id}/anular")
+def anular_venta(venta_id: uuid.UUID, sesion: SesionDep, kiosko_id: KioskoIdDep) -> VentaLeer:
+    """Marca la venta como anulada y devuelve al stock lo que había salido."""
+    venta = sesion.get(Venta, venta_id)
+    if venta is None or venta.kiosko_id != kiosko_id:
+        raise HTTPException(404, "Venta no encontrada")
+    if venta.anulada:
+        return venta
+
+    caja = sesion.get(Caja, venta.caja_id)
+    if caja.cerrada_en is not None:
+        raise HTTPException(409, "No se puede anular una venta de una caja ya cerrada")
+
+    venta.anulada = True
+    for item in venta.items:
+        if item.producto_id:
+            sesion.add(
+                MovimientoStock(
+                    kiosko_id=kiosko_id,
+                    producto_id=item.producto_id,
+                    cantidad=item.cantidad,
+                    motivo=MotivoStock.ANULACION,
+                    venta_id=venta.id,
+                )
+            )
+    sesion.commit()
+    return venta

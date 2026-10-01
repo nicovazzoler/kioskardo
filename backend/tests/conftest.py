@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 from fastapi.testclient import TestClient
@@ -49,3 +50,11 @@ def cliente(sesion, kiosko):
     app.dependency_overrides[obtener_sesion] = lambda: sesion
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def caja(cliente):
+    """Una caja abierta con $10.000 de efectivo inicial."""
+    respuesta = cliente.put(f"/api/cajas/{uuid.uuid4()}", json={"monto_inicial": 1000000})
+    assert respuesta.status_code == 200, respuesta.text
+    return respuesta.json()

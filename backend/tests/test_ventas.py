@@ -1,15 +1,6 @@
 import uuid
 
-import pytest
-
 from tests.test_productos import mover_stock, nuevo_producto
-
-
-@pytest.fixture
-def caja(cliente):
-    respuesta = cliente.put(f"/api/cajas/{uuid.uuid4()}", json={"monto_inicial": 1000000})
-    assert respuesta.status_code == 200, respuesta.text
-    return respuesta.json()
 
 
 def item(producto=None, precio=50000, cantidad=1, subtotal=None, nombre="Alfajor"):

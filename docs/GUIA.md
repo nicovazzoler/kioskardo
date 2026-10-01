@@ -68,9 +68,9 @@ el modal **no sabe** qué pasa después; eso lo decide quien lo abrió.
 - `subirPendientes` (línea 33) los manda en orden. Si falla la red, corta y reintenta a los 15 s.
 - Si el servidor responde 4xx (datos inválidos), no reintenta: lo marca con error.
 
-**7. El servidor valida.** `backend/app/esquemas.py` → `VentaCrear` (línea 116)
+**7. El servidor valida.** `backend/app/esquemas.py` → `VentaCrear` (línea 151)
 Pydantic valida antes de que llegue a tu código: que haya ítems, que los subtotales cierren
-y que los pagos sumen el total (`pagos_cubren_el_total`, línea 127). Si algo falla, FastAPI
+y que los pagos sumen el total (`pagos_cubren_el_total`, línea 162). Si algo falla, FastAPI
 responde 422 solo.
 
 **8. El servidor guarda.** `backend/app/rutas/ventas.py` → `registrar_venta` (línea 22)
@@ -81,9 +81,16 @@ responde 422 solo.
 Cada test es un caso concreto con nombre en castellano. Leé solo los nombres de las
 funciones: son la especificación de lo que tiene que pasar.
 
-Si entendiste estos 9 pasos, entendiste el 70% de la app. El inventario sigue exactamente
-el mismo camino: `InventarioPage` → `FormularioProducto` → `lib/productos.ts` → `encolar` →
-`rutas/productos.py`.
+Si entendiste estos 9 pasos, entendiste el 70% de la app. El inventario y la caja siguen
+exactamente el mismo camino:
+
+- Inventario: `InventarioPage` → `FormularioProducto` → `lib/productos.ts` → `encolar` → `rutas/productos.py`
+- Caja: `CajaPage` → `ModalCierre` / `ModalMovimiento` → `lib/cajas.ts` → `encolar` → `rutas/cajas.py`
+
+La caja agrega una idea más: el resumen (cuánto efectivo debería haber) se calcula **dos
+veces**, en `frontend/src/lib/resumenCaja.ts` con los datos locales (para que funcione sin
+conexión) y en `backend/app/resumen.py` con los del servidor (para el historial). Hacen la
+misma cuenta y tienen tests con los mismos números.
 
 ## 3. Orden de lectura sugerido
 

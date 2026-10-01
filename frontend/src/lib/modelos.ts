@@ -45,6 +45,21 @@ export interface Caja {
   cerrada_en: string | null
   monto_inicial: number
   monto_contado: number | null
+  nota: string | null
+}
+
+export interface ResumenCaja {
+  cantidad_ventas: number
+  total_ventas: number
+  por_medio: Record<MedioPago, number>
+  ingresos: number
+  egresos: number
+  // Inicial + ventas en efectivo + ingresos - egresos: lo que debería haber en el cajón.
+  efectivo_esperado: number
+}
+
+export interface CajaConResumen extends Caja {
+  resumen: ResumenCaja
 }
 
 export interface Venta {

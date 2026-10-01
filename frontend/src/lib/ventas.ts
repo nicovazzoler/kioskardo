@@ -25,14 +25,28 @@ export async function registrarVenta(cajaId: string, items: VentaItem[], pagos: 
 
   await db.transaction('rw', db.ventas, db.productos, async () => {
     await db.ventas.put(venta)
-    for (const item of items) {
-      if (!item.producto_id) continue
-      const producto = await db.productos.get(item.producto_id)
-      if (producto) await db.productos.update(producto.id, { stock: redondearGramos(producto.stock - item.cantidad) })
-    }
+    await moverStockLocal(items, -1)
   })
 
   const { id, total: _total, anulada: _anulada, ...cuerpo } = venta
   await encolar('PUT', `/ventas/${id}`, cuerpo, 'ventas')
   return venta
+}
+
+// Marca la venta como anulada y devuelve al stock local lo que había salido.
+export async function anularVenta(venta: Venta) {
+  await db.transaction('rw', db.ventas, db.productos, async () => {
+    await db.ventas.update(venta.id, { anulada: true })
+    await moverStockLocal(venta.items, +1)
+  })
+  await encolar('POST', `/ventas/${venta.id}/anular`, {}, 'ventas')
+}
+
+// signo -1 al vender, +1 al anular. Los ítems "Varios" no tienen producto y se saltean.
+async function moverStockLocal(items: VentaItem[], signo: 1 | -1) {
+  for (const item of items) {
+    if (!item.producto_id) continue
+    const producto = await db.productos.get(item.producto_id)
+    if (producto) await db.productos.update(producto.id, { stock: redondearGramos(producto.stock + signo * item.cantidad) })
+  }
 }

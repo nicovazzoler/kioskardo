@@ -5,7 +5,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.modelos import MedioPago, Unidad
+from app.modelos import MedioPago, TipoMovimientoCaja, Unidad
 
 Centavos = Annotated[int, Field(ge=0)]
 Cantidad = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
@@ -76,6 +76,41 @@ class CajaLeer(BaseModel):
     cerrada_en: datetime | None
     monto_inicial: int
     monto_contado: int | None
+    nota: str | None
+
+
+class CajaCerrar(BaseModel):
+    monto_contado: Centavos
+    nota: str | None = Field(default=None, max_length=500)
+    cerrada_en: datetime | None = None
+
+
+class ResumenCaja(BaseModel):
+    cantidad_ventas: int
+    total_ventas: int
+    por_medio: dict[MedioPago, int]
+    ingresos: int
+    egresos: int
+    # Inicial + ventas en efectivo + ingresos - egresos: lo que debería haber en el cajón.
+    efectivo_esperado: int
+
+
+class CajaConResumen(CajaLeer):
+    resumen: ResumenCaja
+
+
+class MovimientoCajaCrear(BaseModel):
+    id: uuid.UUID
+    tipo: TipoMovimientoCaja
+    monto: Annotated[int, Field(gt=0)]
+    motivo: str = Field(min_length=1, max_length=200)
+    creado_en: datetime
+
+
+class MovimientoCajaLeer(MovimientoCajaCrear):
+    model_config = ConfigDict(from_attributes=True)
+
+    caja_id: uuid.UUID
 
 
 class VentaItemCrear(BaseModel):
