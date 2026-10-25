@@ -91,7 +91,7 @@ function extraerMensaje(error: ErrorApi): string {
   }
 }
 
-// Descarta los cambios rechazados y vuelve a traer el catálogo del servidor.
+// Vuelve a traer el catálogo para deshacer lo que se había aplicado localmente.
 export async function descartarRechazados() {
   await db.pendientes.filter((p) => !!p.error).delete()
   await sincronizar()

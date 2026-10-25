@@ -12,7 +12,6 @@ export function ListaVentas({ ventas }: { ventas: Venta[] }) {
     <ul className="divide-y divide-slate-100 rounded-xl bg-white ring-1 ring-slate-200">
       {ventas.map((venta) => (
         <li key={venta.id}>
-          {/* <details> es un desplegable nativo de HTML: no necesita estado de React. */}
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-slate-50">
               <span className="w-12 shrink-0 text-sm text-slate-500 tabular-nums">{formatearHora(venta.creado_en)}</span>

@@ -31,7 +31,6 @@ export function EstadoConexion() {
     const intervalo = setInterval(verificar, INTERVALO_MS)
     window.addEventListener('online', verificar)
     window.addEventListener('offline', verificar)
-    // La función que devuelve el efecto se ejecuta al desmontar: limpia timers y listeners.
     return () => {
       clearInterval(intervalo)
       window.removeEventListener('online', verificar)

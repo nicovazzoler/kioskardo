@@ -17,8 +17,7 @@ export function centavosATexto(centavos: number | null): string {
   return Number.isInteger(pesos) ? String(pesos) : pesos.toFixed(2).replace('.', ',')
 }
 
-// Interpreta lo que se tipea en un campo de precio y devuelve centavos, o null si no es válido.
-// Acepta formato argentino ("1.500,50") y también punto decimal ("1500.5").
+// "1.500,50" o "1500.5" -> centavos. null si no es válido.
 export function parsearPesos(texto: string): number | null {
   let limpio = texto.replace(/[\s$]/g, '')
   if (!limpio) return null

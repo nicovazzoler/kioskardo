@@ -1,7 +1,6 @@
 import { formatearPesos } from '../lib/dinero'
 
 // Vista para la pantalla que mira el cliente: sin navegación, letras grandes.
-// En la fase 5 se conecta por WebSocket a la venta en curso.
 export function PantallaClientePage() {
   return (
     <div className="flex h-full flex-col bg-slate-900 text-white">
