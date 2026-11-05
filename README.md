@@ -1,8 +1,29 @@
 # Kioskardo
 
-Punto de venta para kioscos. Funciona en celular, tablet y PC como PWA (web instalable).
+Punto de venta para kioscos. Funciona en celular, tablet y PC como PWA (web instalable) y sigue
+vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
+
+> **Estado: en pausa.** Las fases 1 a 4 están terminadas y probadas. Faltan la pantalla del cliente
+> en vivo (fase 5) y la impresión de tickets (fase 6).
 
 Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
+
+## Qué hace
+
+- **Venta:** escaneo con pistola lectora o con la cámara del celular, búsqueda sin importar tildes,
+  productos por peso ("$500 de caramelos"), ítems "Varios" de monto libre y cobro con hasta dos
+  medios de pago, con cálculo de vuelto.
+- **Inventario:** alta rápida escaneando el código, stock calculado a partir de movimientos (compra,
+  merma, ajuste) y margen de ganancia por producto.
+- **Caja:** apertura con monto inicial, ingresos y egresos de efectivo, anulación de ventas, cierre
+  con arqueo (contado contra esperado) e historial de cierres.
+- **Offline:** todo se guarda primero en el dispositivo y se sube al servidor cuando hay conexión.
+
+## Pendiente
+
+- **Fase 5:** pantalla del cliente en otro dispositivo, en tiempo real (WebSocket).
+- **Fase 6:** impresión de tickets en impresora térmica Bluetooth.
+- Más adelante: empleados y turnos, panel para un dueño con varios kioscos.
 
 ## Estructura
 
