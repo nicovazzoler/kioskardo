@@ -51,10 +51,8 @@ class ProductoLeer(BaseModel):
 
 
 class MovimientoStockCrear(BaseModel):
-    """Qué significa `cantidad` depende del motivo:
-    - compra: unidades que entran.
-    - merma: unidades que se pierden (rotura, vencimiento).
-    - ajuste: el stock real contado; el movimiento se calcula por diferencia.
+    """`cantidad` en compra y merma: cuánto entra o sale. En ajuste: el stock real contado,
+    y el movimiento se calcula por diferencia.
     """
 
     id: uuid.UUID

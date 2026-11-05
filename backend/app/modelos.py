@@ -1,9 +1,5 @@
-"""Modelo de datos.
-
-Convenciones:
-- Montos en centavos (BigInteger): 150050 = $1.500,50.
-- Ids UUID generados en el cliente, para poder crear registros sin conexión.
-- Todo cuelga de un kiosko_id, aunque hoy haya uno solo.
+"""Montos en centavos (150050 = $1.500,50). Ids UUID generados en el cliente, para crear
+sin conexión. Todo cuelga de un kiosko_id, aunque hoy haya uno solo.
 """
 
 import enum

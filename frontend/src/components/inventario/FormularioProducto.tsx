@@ -47,7 +47,6 @@ function camposDesde(producto: Producto | undefined, codigoInicial = ''): Campos
 }
 
 export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEditarOtro, alCrear }: Props) {
-  // useLiveQuery se re-ejecuta solo cuando cambian los datos en IndexedDB (ej: al ajustar stock).
   const producto = useLiveQuery(() => (productoId ? db.productos.get(productoId) : undefined), [productoId])
   const esAlta = !productoId
 

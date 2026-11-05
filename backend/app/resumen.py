@@ -6,10 +6,8 @@ from app.modelos import Caja, MedioPago, MovimientoCaja, TipoMovimientoCaja, Ven
 
 
 def calcular_resumen(sesion: Session, caja: Caja) -> ResumenCaja:
-    """Totales de una caja. Las ventas anuladas no cuentan.
-
-    El frontend hace la misma cuenta con sus datos locales (frontend/src/lib/resumenCaja.ts)
-    para mostrarla sin conexión: si cambia una, hay que cambiar la otra.
+    """Las ventas anuladas no cuentan. frontend/src/lib/resumenCaja.ts hace la misma cuenta
+    para funcionar sin conexión: si cambia una, hay que cambiar la otra.
     """
     cantidad, total = sesion.execute(
         select(func.count(), func.coalesce(func.sum(Venta.total), 0)).where(

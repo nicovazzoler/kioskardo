@@ -31,7 +31,6 @@ export function InventarioPage() {
   const [formulario, setFormulario] = useState<Formulario | null>(null)
   const [camara, setCamara] = useState(false)
 
-  // useMemo: recalcula la lista filtrada solo si cambian los productos, la búsqueda o el filtro.
   const visibles = useMemo(() => {
     const termino = normalizar(busqueda)
     return (productos ?? []).filter((p) => {
