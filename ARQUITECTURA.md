@@ -49,7 +49,7 @@ De dónde sale: la versión, de `requirements*.txt`; el uso, de los `import` de 
 | `pydantic-settings` | 2.15.0 | sin import directo |
 | `pytest` | 9.1.1 | `backend/tests/conftest.py` |
 | `ruff` | 0.16.9 | sin import directo |
-| `sqlalchemy` | 2.1.1 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` y 9 más |
+| `sqlalchemy` | 2.1.1 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` y 10 más |
 
 <details>
 <summary><b>Desglose por pantalla</b> — endpoints y tablas, uno por uno</summary>
