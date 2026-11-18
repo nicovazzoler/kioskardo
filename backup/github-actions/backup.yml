@@ -1,0 +1,109 @@
+# Backup diario de la base de Kioskardo. Va en un repositorio PRIVADO, no en el de la app:
+# los artifacts de un repo público los puede bajar cualquiera, y el dump tiene todas las ventas.
+# Cómo instalarlo: backup/LEEME.md del repo de la app.
+
+name: Backup de la base
+
+on:
+  schedule:
+    # 03:00 UTC = 00:00 en Argentina: el kiosco ya cerró y se guarda el día completo.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: backup-base
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Instalar el pg_dump de la misma versión que el servidor
+        run: |
+          set -euo pipefail
+          if [ -z "${DATABASE_URL:-}" ]; then
+            echo "Falta el secret DATABASE_URL. Ver backup/LEEME.md en el repo de la app." >&2
+            exit 1
+          fi
+          # pg_dump se niega a trabajar con un servidor más nuevo que él. El psql que trae el
+          # runner sí puede preguntarle la versión, y con eso se instala el cliente que corresponde.
+          NUM=$(psql "$DATABASE_URL" -tAc "SHOW server_version_num")
+          MAYOR=$((NUM / 10000))
+          echo "El servidor es PostgreSQL $MAYOR"
+
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list > /dev/null
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "postgresql-client-$MAYOR"
+
+          echo "/usr/lib/postgresql/$MAYOR/bin" >> "$GITHUB_PATH"
+          echo "MAYOR=$MAYOR" >> "$GITHUB_ENV"
+
+      - name: Hacer el backup
+        id: dump
+        # Con "bash" adelante no importa si el archivo perdió el permiso de ejecución al subirlo.
+        run: bash ./scripts/hacer_backup.sh backups
+
+      - name: Probar que se puede restaurar
+        env:
+          ARCHIVO: ${{ steps.dump.outputs.archivo }}
+        run: |
+          set -euo pipefail
+          docker run -d --name verificacion \
+            -e POSTGRES_PASSWORD=verificar -p 55432:5432 "postgres:$MAYOR"
+          for i in $(seq 1 40); do
+            pg_isready -h 127.0.0.1 -p 55432 -q && break
+            sleep 2
+          done
+          bash ./scripts/verificar_restore.sh "$ARCHIVO" \
+            "postgresql://postgres:verificar@127.0.0.1:55432/postgres"
+
+      - name: Guardar el backup
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ steps.dump.outputs.nombre }}
+          path: ${{ steps.dump.outputs.archivo }}
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Dejar constancia del último backup
+        env:
+          NOMBRE: ${{ steps.dump.outputs.nombre }}
+          KB: ${{ steps.dump.outputs.kb }}
+          TABLAS: ${{ steps.dump.outputs.tablas }}
+        run: |
+          set -euo pipefail
+          FECHA=$(TZ=America/Argentina/Buenos_Aires date '+%d/%m/%Y %H:%M')
+          {
+            echo "# Último backup"
+            echo
+            echo "- **Fecha:** $FECHA (hora argentina)"
+            echo "- **Archivo:** ${NOMBRE}.dump"
+            echo "- **Tamaño:** ${KB} KB"
+            echo "- **Tablas:** ${TABLAS}"
+            echo "- **Restauración probada:** sí"
+            echo
+            echo "El archivo se baja desde la pestaña **Actions**, en los artifacts de esa corrida."
+            echo
+            echo "> Si esta fecha quedó vieja, el backup dejó de correr."
+          } > ULTIMO_BACKUP.md
+
+          # El commit diario además mantiene activo el repo: GitHub apaga los workflows
+          # programados de repos sin actividad durante 60 días.
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ULTIMO_BACKUP.md
+          git diff --staged --quiet || git commit -m "Backup del $FECHA"
+          git push

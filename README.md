@@ -120,6 +120,7 @@ Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se nie
 ## Deploy
 
 En Railway, con el `Dockerfile` de la raíz. Pasos y variables en [docs/DEPLOY.md](docs/DEPLOY.md).
+Backups diarios de la base con GitHub Actions: [backup/LEEME.md](backup/LEEME.md).
 
 En desarrollo la API no pide clave. Para probar la pantalla de ingreso, agregar
 `CLAVE_ACCESO=una-clave` en `backend/.env`.

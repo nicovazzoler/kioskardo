@@ -51,7 +51,7 @@ docker run --rm --network host \
 
 App en http://localhost:8080.
 
-## Pendiente
+## Backups
 
-- **Backups de la base.** Todavía no hay. Antes de que el kiosco dependa de la app hay que
-  armarlos, como los de la pelu.
+Railway no hace backups en el plan Hobby. Después del primer deploy hay que instalar el backup
+diario en GitHub Actions: pasos en [backup/LEEME.md](../backup/LEEME.md).
