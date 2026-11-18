@@ -4,6 +4,7 @@ import { EscanerCamara } from '../components/EscanerCamara'
 import { FormularioProducto } from '../components/inventario/FormularioProducto'
 import { AbrirCaja } from '../components/venta/AbrirCaja'
 import { ModalCobro } from '../components/venta/ModalCobro'
+import { ModalMonto } from '../components/venta/ModalMonto'
 import { ModalPeso } from '../components/venta/ModalPeso'
 import { ModalVarios } from '../components/venta/ModalVarios'
 import { useCarrito, type ItemCarrito } from '../hooks/useCarrito'
@@ -20,6 +21,7 @@ import { registrarVenta } from '../lib/ventas'
 
 type ModalAbierto =
   | { tipo: 'peso'; producto: Producto }
+  | { tipo: 'monto'; producto: Producto }
   | { tipo: 'varios' }
   | { tipo: 'cobro' }
   | { tipo: 'crear'; codigo: string }
@@ -54,6 +56,11 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     return (productos ?? []).filter((p) => normalizar(p.nombre).includes(termino)).slice(0, MAX_RESULTADOS)
   }, [productos, busqueda])
 
+  const sinCodigo = useMemo(
+    () => (productos ?? []).filter((p) => !p.codigo_barras).sort((a, b) => a.nombre.localeCompare(b.nombre)),
+    [productos],
+  )
+
   const enfocarBusqueda = () => {
     if (tienePunteroFino) setTimeout(() => inputBusqueda.current?.focus())
   }
@@ -67,7 +74,8 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     setBusqueda('')
     setCodigoDesconocido(null)
     setUltimaVenta(null)
-    if (producto.unidad === 'kg') setModal({ tipo: 'peso', producto })
+    if (producto.precio_libre) setModal({ tipo: 'monto', producto })
+    else if (producto.unidad === 'kg') setModal({ tipo: 'peso', producto })
     else carrito.agregarProducto(producto)
   }
 
@@ -132,13 +140,28 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
                     className={`flex w-full justify-between px-4 py-3 text-left hover:bg-slate-50 ${indice === 0 ? 'bg-slate-50' : ''}`}
                   >
                     <span className="truncate">{producto.nombre}</span>
-                    <span className="ml-3 shrink-0 font-semibold tabular-nums">{formatearPesos(producto.precio_venta)}</span>
+                    <span className="ml-3 shrink-0 font-semibold tabular-nums">{etiquetaPrecio(producto)}</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
         </div>
+
+        {sinCodigo.length > 0 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
+            {sinCodigo.map((producto) => (
+              <button
+                key={producto.id}
+                onClick={() => agregar(producto)}
+                className="shrink-0 rounded-lg bg-white px-3 py-2 text-left ring-1 ring-slate-200 hover:bg-slate-50"
+              >
+                <span className="block font-medium">{producto.nombre}</span>
+                <span className="block text-xs text-slate-500 tabular-nums">{etiquetaPrecio(producto)}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {codigoDesconocido && (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-red-50 px-4 py-3 text-red-800">
@@ -219,6 +242,16 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
           }}
         />
       )}
+      {modal?.tipo === 'monto' && (
+        <ModalMonto
+          producto={modal.producto}
+          alCerrar={cerrarModal}
+          alConfirmar={(monto) => {
+            carrito.agregarPrecioLibre(modal.producto, monto)
+            cerrarModal()
+          }}
+        />
+      )}
       {modal?.tipo === 'varios' && (
         <ModalVarios
           alCerrar={cerrarModal}
@@ -251,6 +284,11 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
       )}
     </div>
   )
+}
+
+function etiquetaPrecio(producto: Producto) {
+  if (producto.precio_libre) return 'Precio libre'
+  return formatearPesos(producto.precio_venta) + (producto.unidad === 'kg' ? ' /kg' : '')
 }
 
 interface LineaProps {

@@ -48,6 +48,9 @@ export function useCarrito() {
   const agregarVarios = (monto: number, descripcion: string) =>
     setItems((actuales) => [...actuales, nuevoItem(null, descripcion || 'Varios', monto, 1, 'unidad')])
 
+  const agregarPrecioLibre = (producto: Producto, monto: number) =>
+    setItems((actuales) => [...actuales, nuevoItem(producto.id, producto.nombre, monto, 1, 'unidad')])
+
   const cambiarCantidad = (id: string, cantidad: number) =>
     setItems((actuales) => (cantidad <= 0 ? actuales.filter((i) => i.id !== id) : conCantidad(actuales, id, cantidad)))
 
@@ -55,7 +58,7 @@ export function useCarrito() {
 
   const vaciar = () => setItems([])
 
-  return { items, total: calcularTotal(items), agregarProducto, agregarPesado, agregarVarios, cambiarCantidad, quitar, vaciar }
+  return { items, total: calcularTotal(items), agregarProducto, agregarPesado, agregarVarios, agregarPrecioLibre, cambiarCantidad, quitar, vaciar }
 }
 
 function nuevoItem(productoId: string | null, nombre: string, precio: number, cantidad: number, unidad: Unidad): ItemCarrito {

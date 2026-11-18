@@ -12,6 +12,8 @@ export interface ProductoGuardar {
   precio_venta: number
   costo: number | null
   unidad: Unidad
+  // El precio se tipea al vender (ej: fiambre, con el monto que marca la balanza).
+  precio_libre: boolean
   stock_minimo: number
   activo: boolean
 }

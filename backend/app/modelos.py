@@ -16,6 +16,7 @@ from sqlalchemy import (
     Index,
     Numeric,
     String,
+    false,
     func,
     text,
 )
@@ -95,6 +96,8 @@ class Producto(Base):
     precio_venta: Mapped[int] = mapped_column(BigInteger)
     costo: Mapped[int | None] = mapped_column(BigInteger)
     unidad: Mapped[Unidad] = mapped_column(columna_enum(Unidad), default=Unidad.UNIDAD)
+    # El precio se tipea al vender (ej: fiambre, con el monto que marca la balanza).
+    precio_libre: Mapped[bool] = mapped_column(default=False, server_default=false())
     stock_minimo: Mapped[Decimal] = mapped_column(Numeric(12, 3), default=0)
     # Los productos no se borran (las ventas viejas los referencian): se desactivan.
     activo: Mapped[bool] = mapped_column(default=True)

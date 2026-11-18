@@ -17,6 +17,7 @@ class ProductoGuardar(BaseModel):
     precio_venta: Centavos
     costo: Centavos | None = None
     unidad: Unidad = Unidad.UNIDAD
+    precio_libre: bool = False
     stock_minimo: Cantidad = Decimal(0)
     activo: bool = True
 
@@ -34,6 +35,12 @@ class ProductoGuardar(BaseModel):
             raise ValueError("El nombre no puede estar vacío")
         return valor
 
+    @model_validator(mode="after")
+    def precio_libre_por_unidad(self) -> Self:
+        if self.precio_libre and self.unidad == Unidad.KG:
+            raise ValueError("Un producto de precio libre se vende por unidad, no por kg")
+        return self
+
 
 class ProductoLeer(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -44,6 +51,7 @@ class ProductoLeer(BaseModel):
     precio_venta: int
     costo: int | None
     unidad: Unidad
+    precio_libre: bool
     # float y no Decimal: Pydantic serializa Decimal como string y el frontend espera números.
     stock_minimo: float
     activo: bool

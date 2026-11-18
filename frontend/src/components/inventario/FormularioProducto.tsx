@@ -24,12 +24,20 @@ interface Props {
   alCrear?: (id: string) => void
 }
 
+type SeVendePor = Unidad | 'libre'
+
+const OPCIONES_VENTA: { valor: SeVendePor; nombre: string }[] = [
+  { valor: 'unidad', nombre: 'Unidad' },
+  { valor: 'kg', nombre: 'Peso (kg)' },
+  { valor: 'libre', nombre: 'Precio libre' },
+]
+
 interface Campos {
   codigo: string
   nombre: string
   precio: string
   costo: string
-  unidad: Unidad
+  seVendePor: SeVendePor
   stockInicial: string
   stockMinimo: string
 }
@@ -40,7 +48,7 @@ function camposDesde(producto: Producto | undefined, codigoInicial = ''): Campos
     nombre: producto?.nombre ?? '',
     precio: centavosATexto(producto?.precio_venta ?? null),
     costo: centavosATexto(producto?.costo ?? null),
-    unidad: producto?.unidad ?? 'unidad',
+    seVendePor: producto?.precio_libre ? 'libre' : (producto?.unidad ?? 'unidad'),
     stockInicial: '',
     stockMinimo: producto?.stock_minimo ? String(producto.stock_minimo) : '',
   }
@@ -55,7 +63,7 @@ export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEdit
 
   return (
     <Modal titulo={esAlta ? 'Nuevo producto' : 'Editar producto'} alCerrar={alCerrar}>
-      {producto && <AjusteStock producto={producto} />}
+      {producto && !producto.precio_libre && <AjusteStock producto={producto} />}
       <Formulario
         // key: al cambiar de producto, React descarta el formulario anterior y arranca uno limpio.
         key={productoId ?? 'nuevo'}
@@ -92,16 +100,18 @@ function Formulario({
   const duplicado = useLiveQuery(() => (codigo ? buscarPorCodigo(codigo) : undefined), [codigo])
   const hayDuplicado = !!duplicado && duplicado.id !== producto?.id
 
-  const precio = parsearPesos(campos.precio)
-  const costo = campos.costo.trim() ? parsearPesos(campos.costo) : null
-  const stockInicial = campos.stockInicial.trim() ? parsearCantidad(campos.stockInicial, campos.unidad) : 0
-  const stockMinimo = campos.stockMinimo.trim() ? parsearCantidad(campos.stockMinimo, campos.unidad) : 0
+  const precioLibre = campos.seVendePor === 'libre'
+  const unidad: Unidad = campos.seVendePor === 'libre' ? 'unidad' : campos.seVendePor
+  const precio = precioLibre ? 0 : parsearPesos(campos.precio)
+  const costo = !precioLibre && campos.costo.trim() ? parsearPesos(campos.costo) : null
+  const stockInicial = !precioLibre && campos.stockInicial.trim() ? parsearCantidad(campos.stockInicial, unidad) : 0
+  const stockMinimo = !precioLibre && campos.stockMinimo.trim() ? parsearCantidad(campos.stockMinimo, unidad) : 0
   const margen = precio !== null && costo ? Math.round(((precio - costo) / costo) * 100) : null
 
   const errores = {
     nombre: !campos.nombre.trim() ? 'Falta el nombre' : null,
     precio: precio === null ? 'Precio inválido' : null,
-    costo: campos.costo.trim() && costo === null ? 'Costo inválido' : null,
+    costo: !precioLibre && campos.costo.trim() && costo === null ? 'Costo inválido' : null,
     stockInicial: stockInicial === null ? 'Cantidad inválida' : null,
     stockMinimo: stockMinimo === null ? 'Cantidad inválida' : null,
   }
@@ -125,7 +135,8 @@ function Formulario({
       nombre: campos.nombre.trim(),
       precio_venta: precio!,
       costo,
-      unidad: campos.unidad,
+      unidad,
+      precio_libre: precioLibre,
       stock_minimo: stockMinimo!,
       activo: producto?.activo ?? true,
     })
@@ -137,8 +148,8 @@ function Formulario({
     if (esAlta) alCrear?.(id)
     if (!cargarOtro) return alCerrar()
     setUltimoGuardado(campos.nombre.trim())
-    // Se conserva la unidad: al cargar mercadería suelen venir varios productos del mismo tipo.
-    setCampos({ ...camposDesde(undefined), unidad: campos.unidad })
+    // Se conserva cómo se vende: al cargar mercadería suelen venir varios productos del mismo tipo.
+    setCampos({ ...camposDesde(undefined), seVendePor: campos.seVendePor })
     setIntentoGuardar(false)
     inputCodigo.current?.focus()
   }
@@ -196,60 +207,64 @@ function Formulario({
         />
       </Campo>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Campo etiqueta="Precio de venta" error={intentoGuardar ? errores.precio : null}>
-          <InputPesos ref={inputPrecio} valor={campos.precio} alCambiar={(v) => cambiar('precio', v)} error={intentoGuardar && !!errores.precio} />
-        </Campo>
-        <Campo
-          etiqueta="Costo (opcional)"
-          error={errores.costo}
-          ayuda={margen !== null ? `Margen: ${margen}%` : undefined}
-        >
-          <InputPesos valor={campos.costo} alCambiar={(v) => cambiar('costo', v)} error={!!errores.costo} />
-        </Campo>
-      </div>
+      {!precioLibre && (
+        <div className="grid grid-cols-2 gap-3">
+          <Campo etiqueta="Precio de venta" error={intentoGuardar ? errores.precio : null}>
+            <InputPesos ref={inputPrecio} valor={campos.precio} alCambiar={(v) => cambiar('precio', v)} error={intentoGuardar && !!errores.precio} />
+          </Campo>
+          <Campo
+            etiqueta="Costo (opcional)"
+            error={errores.costo}
+            ayuda={margen !== null ? `Margen: ${margen}%` : undefined}
+          >
+            <InputPesos valor={campos.costo} alCambiar={(v) => cambiar('costo', v)} error={!!errores.costo} />
+          </Campo>
+        </div>
+      )}
 
-      <Campo etiqueta="Se vende por" grupo>
-        <div className="grid grid-cols-2 gap-2">
-          {(['unidad', 'kg'] as const).map((unidad) => (
+      <Campo etiqueta="Se vende por" grupo ayuda={precioLibre ? 'Al venderlo se tipea el monto. No lleva stock.' : undefined}>
+        <div className="grid grid-cols-3 gap-2">
+          {OPCIONES_VENTA.map((opcion) => (
             <button
-              key={unidad}
+              key={opcion.valor}
               type="button"
-              onClick={() => cambiar('unidad', unidad)}
+              onClick={() => cambiar('seVendePor', opcion.valor)}
               className={`rounded-lg border py-2 font-medium ${
-                campos.unidad === unidad ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-300 text-slate-600'
+                campos.seVendePor === opcion.valor ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-300 text-slate-600'
               }`}
             >
-              {unidad === 'unidad' ? 'Unidad' : 'Peso (kg)'}
+              {opcion.nombre}
             </button>
           ))}
         </div>
       </Campo>
 
-      <div className="grid grid-cols-2 gap-3">
-        {esAlta && (
-          <Campo etiqueta="Stock inicial" error={errores.stockInicial}>
+      {!precioLibre && (
+        <div className="grid grid-cols-2 gap-3">
+          {esAlta && (
+            <Campo etiqueta="Stock inicial" error={errores.stockInicial}>
+              <input
+                value={campos.stockInicial}
+                onChange={(e) => cambiar('stockInicial', e.target.value)}
+                inputMode="decimal"
+                placeholder="0"
+                className={claseInput(!!errores.stockInicial)}
+              />
+            </Campo>
+          )}
+          <Campo etiqueta="Avisar si baja de" error={errores.stockMinimo}>
             <input
-              value={campos.stockInicial}
-              onChange={(e) => cambiar('stockInicial', e.target.value)}
+              value={campos.stockMinimo}
+              onChange={(e) => cambiar('stockMinimo', e.target.value)}
               inputMode="decimal"
               placeholder="0"
-              className={claseInput(!!errores.stockInicial)}
+              className={claseInput(!!errores.stockMinimo)}
             />
           </Campo>
-        )}
-        <Campo etiqueta="Avisar si baja de" error={errores.stockMinimo}>
-          <input
-            value={campos.stockMinimo}
-            onChange={(e) => cambiar('stockMinimo', e.target.value)}
-            inputMode="decimal"
-            placeholder="0"
-            className={claseInput(!!errores.stockMinimo)}
-          />
-        </Campo>
-      </div>
+        </div>
+      )}
 
-      {intentoGuardar && precio !== null && precio === 0 && (
+      {intentoGuardar && !precioLibre && precio === 0 && (
         <p className="text-sm text-amber-700">Ojo: el precio es {formatearPesos(0)}.</p>
       )}
 
