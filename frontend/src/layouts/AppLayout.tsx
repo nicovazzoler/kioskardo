@@ -5,6 +5,7 @@ const SECCIONES = [
   { ruta: '/', nombre: 'Venta', icono: '🛒' },
   { ruta: '/inventario', nombre: 'Inventario', icono: '📦' },
   { ruta: '/caja', nombre: 'Caja', icono: '💵' },
+  { ruta: '/ajustes', nombre: 'Ajustes', icono: '⚙️' },
 ]
 
 // Celular: barra de navegación abajo, al alcance del pulgar.

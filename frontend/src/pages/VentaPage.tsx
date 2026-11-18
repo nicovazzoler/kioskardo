@@ -7,6 +7,7 @@ import { ModalCobro } from '../components/venta/ModalCobro'
 import { ModalMonto } from '../components/venta/ModalMonto'
 import { ModalPeso } from '../components/venta/ModalPeso'
 import { ModalVarios } from '../components/venta/ModalVarios'
+import { ModalTicket } from '../components/ticket/ModalTicket'
 import { useCarrito, type ItemCarrito } from '../hooks/useCarrito'
 import { useEscaner } from '../hooks/useEscaner'
 import { useCajaAbierta } from '../lib/cajas'
@@ -14,7 +15,7 @@ import { camaraDisponible } from '../lib/camara'
 import { formatearCantidad } from '../lib/cantidad'
 import { db } from '../lib/db'
 import { formatearPesos } from '../lib/dinero'
-import type { Producto, VentaPago } from '../lib/modelos'
+import type { Producto, Venta, VentaPago } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
 import { registrarVenta } from '../lib/ventas'
@@ -26,6 +27,7 @@ type ModalAbierto =
   | { tipo: 'cobro' }
   | { tipo: 'crear'; codigo: string }
   | { tipo: 'camara' }
+  | { tipo: 'ticket'; venta: Venta }
 
 const MAX_RESULTADOS = 6
 
@@ -47,7 +49,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   const [busqueda, setBusqueda] = useState('')
   const [modal, setModal] = useState<ModalAbierto | null>(null)
   const [codigoDesconocido, setCodigoDesconocido] = useState<string | null>(null)
-  const [ultimaVenta, setUltimaVenta] = useState<{ total: number; vuelto: number } | null>(null)
+  const [ultimaVenta, setUltimaVenta] = useState<{ venta: Venta; vuelto: number } | null>(null)
   const inputBusqueda = useRef<HTMLInputElement>(null)
 
   const resultados = useMemo(() => {
@@ -102,7 +104,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     const items = carrito.items.map(({ unidad: _unidad, ...item }) => item)
     const venta = await registrarVenta(cajaId, items, pagos)
     const efectivo = pagos.find((p) => p.recibido !== null)
-    setUltimaVenta({ total: venta.total, vuelto: efectivo ? efectivo.recibido! - efectivo.monto : 0 })
+    setUltimaVenta({ venta, vuelto: efectivo ? efectivo.recibido! - efectivo.monto : 0 })
     carrito.vaciar()
     cerrarModal()
   }
@@ -175,13 +177,19 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
         )}
 
         {ultimaVenta && !hayItems && (
-          <div className="mt-3 flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900">
-            <span>✓ Venta de {formatearPesos(ultimaVenta.total)}</span>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900">
+            <span className="mr-auto">✓ Venta de {formatearPesos(ultimaVenta.venta.total)}</span>
             {ultimaVenta.vuelto > 0 && (
               <span className="text-lg">
                 Vuelto: <strong className="tabular-nums">{formatearPesos(ultimaVenta.vuelto)}</strong>
               </span>
             )}
+            <button
+              onClick={() => setModal({ tipo: 'ticket', venta: ultimaVenta.venta })}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200 hover:bg-emerald-100"
+            >
+              🧾 Ticket
+            </button>
           </div>
         )}
 
@@ -273,6 +281,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
           }}
         />
       )}
+      {modal?.tipo === 'ticket' && <ModalTicket venta={modal.venta} alCerrar={cerrarModal} />}
       {modal?.tipo === 'camara' && (
         <EscanerCamara
           alCerrar={cerrarModal}

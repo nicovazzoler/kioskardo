@@ -72,6 +72,9 @@ class Kiosko(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     nombre: Mapped[str] = mapped_column(String(120))
+    direccion: Mapped[str | None] = mapped_column(String(200))
+    telefono: Mapped[str | None] = mapped_column(String(50))
+    pie_ticket: Mapped[str | None] = mapped_column(String(200))
     creado_en: Mapped[datetime] = columna_creado_en()
 
 

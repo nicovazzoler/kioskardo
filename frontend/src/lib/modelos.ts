@@ -6,6 +6,17 @@ export type MotivoStock = 'compra' | 'venta' | 'ajuste' | 'merma'
 export type MedioPago = 'efectivo' | 'debito' | 'credito' | 'transferencia' | 'qr'
 export type TipoMovimientoCaja = 'ingreso' | 'egreso'
 
+export interface KioskoGuardar {
+  nombre: string
+  direccion: string | null
+  telefono: string | null
+  pie_ticket: string | null
+}
+
+export interface Kiosko extends KioskoGuardar {
+  id: string
+}
+
 export interface ProductoGuardar {
   codigo_barras: string | null
   nombre: string
