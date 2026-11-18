@@ -72,6 +72,7 @@ pip install -r requirements-dev.txt
 cp .env.example .env             # ajustar DATABASE_URL si hace falta
 alembic upgrade head             # crea las tablas
 python -m app.semilla            # crea el kiosko inicial
+python -m app.sembrador          # datos de muestra, opcional (ver más abajo)
 uvicorn app.main:app --reload
 ```
 
@@ -95,11 +96,29 @@ La cámara solo funciona con https. Para probar el escaneo con cámara desde el 
 
 La pantalla para el cliente está en `/pantalla`.
 
+### 4. Datos de muestra
+
+Recién instalada la app queda vacía: $0 y ningún movimiento. Para verla con un kiosco andando
+(capturas, demos, probar a mano) hay un sembrador:
+
+```bash
+cd backend
+python -m app.sembrador            # sobre una base vacía
+python -m app.sembrador --rehacer  # borra productos, ventas y cajas, y siembra de nuevo
+```
+
+Deja 25 productos con código de barras, precio, costo y stock, una semana de ventas con todos
+los medios de pago, seis cajas cerradas con arqueo y la de hoy abierta. Los datos son inventados
+y siempre los mismos: la semilla del azar está fija, así que dos corridas dan lo mismo.
+
+Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se niega a correr.
+
 ## Comandos útiles
 
 | Qué | Dónde | Comando |
 |---|---|---|
 | Tests backend | `backend/` | `pytest` (usa la base `kioskardo_test`) |
+| Datos de muestra | `backend/` | `python -m app.sembrador` (`--rehacer` para reemplazarlos) |
 | Tests frontend | `frontend/` | `npm test` |
 | Lint backend | `backend/` | `ruff check . && ruff format --check .` |
 | Nueva migración | `backend/` | `alembic revision --autogenerate -m "descripción"` |
