@@ -11,6 +11,14 @@ Centavos = Annotated[int, Field(ge=0)]
 Cantidad = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
 
 
+class SesionCrear(BaseModel):
+    clave: str = Field(max_length=200)
+
+
+class SesionLeer(BaseModel):
+    token: str
+
+
 class KioskoGuardar(BaseModel):
     nombre: str = Field(min_length=1, max_length=120)
     direccion: str | None = Field(default=None, max_length=200)

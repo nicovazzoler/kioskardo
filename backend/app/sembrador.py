@@ -16,7 +16,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from app.config import config
+from app.config import config, es_base_local
 from app.db import SesionLocal
 from app.modelos import (
     Caja,
@@ -36,8 +36,6 @@ from app.semilla import NOMBRE_KIOSKO
 
 # Argentina no tiene horario de verano, así que un offset fijo alcanza y no hace falta tzdata.
 ARGENTINA = timezone(timedelta(hours=-3))
-
-HOSTS_LOCALES = {"localhost", "127.0.0.1", "::1"}
 
 DIAS = 7
 HORA_APERTURA = time(7, 30)
@@ -185,10 +183,10 @@ def exigir_base_local(url_texto: str) -> None:
     """El sembrador escribe datos inventados y con --rehacer borra lo que haya: contra una base
     que no sea local se niega a correr.
     """
-    host = make_url(url_texto).host or "localhost"
-    if host not in HOSTS_LOCALES:
+    if not es_base_local(url_texto):
         raise SystemExit(
-            f"DATABASE_URL apunta a «{host}» y el sembrador solo corre contra una base local."
+            f"DATABASE_URL apunta a «{make_url(url_texto).host}» y el sembrador solo corre"
+            " contra una base local."
         )
 
 
