@@ -1,0 +1,3 @@
+# Los .sh los corre Linux: con finales de línea de Windows fallan con "$'\r': command not found".
+*.sh text eol=lf
+*.yml text eol=lf
