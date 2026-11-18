@@ -44,7 +44,8 @@ async function subirPendientes(): Promise<boolean> {
         await db.pendientes.delete(pendiente.seq!)
       })
     } catch (error) {
-      const esRechazo = error instanceof ErrorApi && error.status >= 400 && error.status < 500
+      // Un 401 no es un rechazo de los datos: falta la clave, y se vuelve a intentar después de ingresarla.
+      const esRechazo = error instanceof ErrorApi && error.status >= 400 && error.status < 500 && error.status !== 401
       if (!esRechazo) throw error
       await db.pendientes.update(pendiente.seq!, { error: extraerMensaje(error) })
     }

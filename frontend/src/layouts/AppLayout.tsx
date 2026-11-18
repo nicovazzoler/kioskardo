@@ -1,5 +1,7 @@
 import { NavLink, Outlet } from 'react-router'
 import { EstadoConexion } from '../components/EstadoConexion'
+import { IngresoClave } from '../components/IngresoClave'
+import { useNecesitaClave } from '../lib/sesion'
 
 const SECCIONES = [
   { ruta: '/', nombre: 'Venta', icono: '🛒' },
@@ -11,6 +13,8 @@ const SECCIONES = [
 // Celular: barra de navegación abajo, al alcance del pulgar.
 // Tablet/PC (md en adelante): barra lateral fija a la izquierda.
 export function AppLayout() {
+  const necesitaClave = useNecesitaClave()
+
   return (
     <div className="flex h-full flex-col md:flex-row">
       <nav className="order-last flex shrink-0 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:order-first md:w-56 md:flex-col md:border-t-0 md:border-r md:pb-0">
@@ -54,6 +58,7 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {necesitaClave && <IngresoClave />}
     </div>
   )
 }

@@ -117,6 +117,13 @@ y siempre los mismos: la semilla del azar está fija, así que dos corridas dan 
 
 Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se niega a correr.
 
+## Deploy
+
+En Railway, con el `Dockerfile` de la raíz. Pasos y variables en [docs/DEPLOY.md](docs/DEPLOY.md).
+
+En desarrollo la API no pide clave. Para probar la pantalla de ingreso, agregar
+`CLAVE_ACCESO=una-clave` en `backend/.env`.
+
 ## Comandos útiles
 
 | Qué | Dónde | Comando |

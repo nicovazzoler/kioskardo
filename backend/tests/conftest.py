@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app.config import config
 from app.db import Base, obtener_sesion
 from app.main import app
 from app.modelos import Kiosko
@@ -15,6 +16,12 @@ URL_TEST = os.environ.get(
     "postgresql+psycopg://kioskardo:kioskardo@localhost:5432/kioskardo_test",
 )
 engine = create_engine(URL_TEST)
+
+
+@pytest.fixture(autouse=True)
+def sin_clave(monkeypatch):
+    # Una CLAVE_ACCESO en el .env de desarrollo no tiene que romper los tests que no la prueban.
+    monkeypatch.setattr(config, "clave_acceso", None)
 
 
 @pytest.fixture(scope="session")
