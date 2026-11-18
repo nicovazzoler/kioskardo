@@ -21,6 +21,7 @@ const FILTROS: { valor: Filtro; nombre: string }[] = [
 ]
 
 function tieneStockBajo(producto: Producto) {
+  if (producto.precio_libre) return false
   return producto.stock <= 0 || producto.stock <= producto.stock_minimo
 }
 
@@ -116,11 +117,17 @@ export function InventarioPage() {
                     tieneStockBajo(producto) ? 'bg-red-50 text-red-700' : 'text-slate-500'
                   }`}
                 >
-                  {formatearCantidad(producto.stock, producto.unidad)}
+                  {producto.precio_libre ? '—' : formatearCantidad(producto.stock, producto.unidad)}
                 </span>
                 <span className="w-28 text-right font-semibold tabular-nums">
-                  {formatearPesos(producto.precio_venta)}
-                  {producto.unidad === 'kg' && <span className="text-xs font-normal text-slate-400">/kg</span>}
+                  {producto.precio_libre ? (
+                    <span className="text-sm font-normal text-slate-500">Precio libre</span>
+                  ) : (
+                    <>
+                      {formatearPesos(producto.precio_venta)}
+                      {producto.unidad === 'kg' && <span className="text-xs font-normal text-slate-400">/kg</span>}
+                    </>
+                  )}
                 </span>
               </button>
             </li>

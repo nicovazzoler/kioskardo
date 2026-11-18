@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { AppLayout } from './layouts/AppLayout'
+import { AjustesPage } from './pages/AjustesPage'
 import { iniciarSincronizacion } from './lib/sincronizacion'
 import { CajaPage } from './pages/CajaPage'
 import { InventarioPage } from './pages/InventarioPage'
@@ -16,6 +17,7 @@ const router = createBrowserRouter([
       { path: '/', element: <VentaPage /> },
       { path: '/inventario', element: <InventarioPage /> },
       { path: '/caja', element: <CajaPage /> },
+      { path: '/ajustes', element: <AjustesPage /> },
     ],
   },
   // Fuera del layout: la pantalla del cliente no lleva menú.

@@ -8,8 +8,8 @@ Todo lo que figura acá está escrito en el código. Nada está inferido por un 
 
 ```mermaid
 graph LR
-  FRONT["25 pantallas<br/>HTML + JS"]
-  API["API<br/>FastAPI · 14 endpoints"]
+  FRONT["29 pantallas<br/>HTML + JS"]
+  API["API<br/>FastAPI · 16 endpoints"]
   FRONT --> API
   DB[("Base de datos<br/>8 tablas")]
   API --> DB
@@ -24,12 +24,14 @@ graph LR
   Pcomponentscaja["components/caja/HistorialCierres.tsx"]
   Tcajas[("cajas")]
   Pcomponentscaja --> Tcajas
+  Plibkioskots["lib/kiosko.ts"]
+  Tkioskos[("kioskos")]
+  Plibkioskots --> Tkioskos
   Plibsincronizac["lib/sincronizacion.ts"]
   Plibsincronizac --> Tcajas
+  Plibsincronizac --> Tkioskos
   Tmovimientoss[("movimientos_stock")]
   Plibsincronizac --> Tmovimientoss
-  Tproductos[("productos")]
-  Plibsincronizac --> Tproductos
   Pfrontendviteco["frontend/vite.config.ts"]
   Pfrontendviteco --> Tcajas
   Pfrontendviteco --> Tmovimientoss
@@ -43,13 +45,13 @@ De dónde sale: la versión, de `requirements*.txt`; el uso, de los `import` de 
 
 | Librería | Versión | Quién la usa |
 |---|---|---|
-| `alembic` | 1.20.0 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` |
-| `fastapi` | 0.142.2 | `backend/app/kiosko.py`, `backend/app/main.py`, `backend/app/rutas/cajas.py`, `backend/app/rutas/productos.py` y 3 más |
+| `alembic` | 1.20.0 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` y 2 más |
+| `fastapi` | 0.142.2 | `backend/app/kiosko.py`, `backend/app/main.py`, `backend/app/rutas/cajas.py`, `backend/app/rutas/kioskos.py` y 4 más |
 | `psycopg` | 3.3.6 | sin import directo |
 | `pydantic-settings` | 2.15.0 | sin import directo |
 | `pytest` | 9.1.1 | `backend/tests/conftest.py` |
 | `ruff` | 0.16.9 | sin import directo |
-| `sqlalchemy` | 2.1.1 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` y 10 más |
+| `sqlalchemy` | 2.1.1 | `backend/alembic/env.py`, `backend/alembic/versions/2026_09_30_1251-8311a5d866a1_modelo_inicial.py`, `backend/alembic/versions/2026_09_30_1940-af146e38f60e_pagos_por_venta_e_items_varios.py`, `backend/alembic/versions/2026_10_01_1634-3f0c08c167e0_motivo_de_stock_anulacion.py` y 12 más |
 
 <details>
 <summary><b>Desglose por pantalla</b> — endpoints y tablas, uno por uno</summary>
@@ -82,16 +84,28 @@ De dónde sale: la versión, de `requirements*.txt`; el uso, de los `import` de 
 - Endpoints que usa: **0**
 - Tablas que tocan esos endpoints: —
 
+### lib/kiosko.ts
+
+- Endpoints que usa: **2**
+- Tablas que tocan esos endpoints: `kioskos`
+
+| Método | Endpoint | Función | Tablas |
+|---|---|---|---|
+| GET | `/api/kiosko` | `leer_kiosko` | kioskos |
+| PUT | `/api/kiosko` | `guardar_kiosko` | kioskos |
+
 ### lib/sincronizacion.ts
 
-- Endpoints que usa: **4**
-- Tablas que tocan esos endpoints: `cajas`, `movimientos_stock`, `productos`
+- Endpoints que usa: **6**
+- Tablas que tocan esos endpoints: `cajas`, `kioskos`, `movimientos_stock`, `productos`
 
 | Método | Endpoint | Función | Tablas |
 |---|---|---|---|
 | GET | `/api/cajas/abierta` | `caja_abierta` | cajas |
 | PUT | `/api/cajas/{caja_id}` | `abrir_caja` | cajas |
 | GET | `/api/cajas/{caja_id}` | `detalle_caja` | — |
+| GET | `/api/kiosko` | `leer_kiosko` | kioskos |
+| PUT | `/api/kiosko` | `guardar_kiosko` | kioskos |
 | GET | `/api/productos` | `listar_productos` | movimientos_stock, productos |
 
 ### main.tsx
@@ -106,8 +120,8 @@ De dónde sale: la versión, de `requirements*.txt`; el uso, de los `import` de 
 
 ### frontend/vite.config.ts
 
-- Endpoints que usa: **14**
-- Tablas que tocan esos endpoints: `cajas`, `movimientos_caja`, `movimientos_stock`, `productos`, `venta_items`, `venta_pagos`, `ventas`
+- Endpoints que usa: **16**
+- Tablas que tocan esos endpoints: `cajas`, `kioskos`, `movimientos_caja`, `movimientos_stock`, `productos`, `venta_items`, `venta_pagos`, `ventas`
 
 | Método | Endpoint | Función | Tablas |
 |---|---|---|---|
@@ -119,6 +133,8 @@ De dónde sale: la versión, de `requirements*.txt`; el uso, de los `import` de 
 | GET | `/api/cajas/{caja_id}/movimientos` | `movimientos_de_caja` | movimientos_caja |
 | POST | `/api/cajas/{caja_id}/movimientos` | `registrar_movimiento` | movimientos_caja |
 | GET | `/api/cajas/{caja_id}/ventas` | `ventas_de_caja` | ventas |
+| GET | `/api/kiosko` | `leer_kiosko` | kioskos |
+| PUT | `/api/kiosko` | `guardar_kiosko` | kioskos |
 | GET | `/api/productos` | `listar_productos` | movimientos_stock, productos |
 | PUT | `/api/productos/{producto_id}` | `guardar_producto` | productos |
 | POST | `/api/productos/{producto_id}/movimientos-stock` | `registrar_movimiento_stock` | movimientos_stock |

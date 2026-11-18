@@ -1,6 +1,6 @@
 import { ErrorApi, pedirApi } from './api'
 import { db, type Pendiente } from './db'
-import type { Caja, MovimientoCaja, Producto, Venta } from './modelos'
+import type { Caja, Kiosko, MovimientoCaja, Producto, Venta } from './modelos'
 
 const INTERVALO_MS = 15_000
 
@@ -53,7 +53,8 @@ async function subirPendientes(): Promise<boolean> {
 }
 
 async function bajarDatos() {
-  const [productos, caja] = await Promise.all([
+  const [kiosko, productos, caja] = await Promise.all([
+    pedirApi<Kiosko>('/kiosko'),
     pedirApi<Producto[]>('/productos'),
     pedirApi<Caja | null>('/cajas/abierta'),
   ])
@@ -65,10 +66,11 @@ async function bajarDatos() {
       ])
     : [[], []]
 
-  const tablas = [db.productos, db.cajas, db.ventas, db.movimientosCaja, db.pendientes]
+  const tablas = [db.kiosko, db.productos, db.cajas, db.ventas, db.movimientosCaja, db.pendientes]
   await db.transaction('rw', tablas, async () => {
     // Si mientras bajaban los datos se hizo un cambio local, no se pisa: se baja en el próximo ciclo.
     if ((await db.pendientes.filter((p) => !p.error).count()) > 0) return
+    await db.kiosko.put(kiosko)
     await db.productos.clear()
     await db.productos.bulkPut(productos)
     // Localmente solo interesa la caja abierta; si se cerró en otro dispositivo, desaparece.

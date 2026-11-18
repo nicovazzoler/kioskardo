@@ -4,8 +4,10 @@ import { EscanerCamara } from '../components/EscanerCamara'
 import { FormularioProducto } from '../components/inventario/FormularioProducto'
 import { AbrirCaja } from '../components/venta/AbrirCaja'
 import { ModalCobro } from '../components/venta/ModalCobro'
+import { ModalMonto } from '../components/venta/ModalMonto'
 import { ModalPeso } from '../components/venta/ModalPeso'
 import { ModalVarios } from '../components/venta/ModalVarios'
+import { ModalTicket } from '../components/ticket/ModalTicket'
 import { useCarrito, type ItemCarrito } from '../hooks/useCarrito'
 import { useEscaner } from '../hooks/useEscaner'
 import { useCajaAbierta } from '../lib/cajas'
@@ -13,17 +15,19 @@ import { camaraDisponible } from '../lib/camara'
 import { formatearCantidad } from '../lib/cantidad'
 import { db } from '../lib/db'
 import { formatearPesos } from '../lib/dinero'
-import type { Producto, VentaPago } from '../lib/modelos'
+import type { Producto, Venta, VentaPago } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
 import { registrarVenta } from '../lib/ventas'
 
 type ModalAbierto =
   | { tipo: 'peso'; producto: Producto }
+  | { tipo: 'monto'; producto: Producto }
   | { tipo: 'varios' }
   | { tipo: 'cobro' }
   | { tipo: 'crear'; codigo: string }
   | { tipo: 'camara' }
+  | { tipo: 'ticket'; venta: Venta }
 
 const MAX_RESULTADOS = 6
 
@@ -45,7 +49,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   const [busqueda, setBusqueda] = useState('')
   const [modal, setModal] = useState<ModalAbierto | null>(null)
   const [codigoDesconocido, setCodigoDesconocido] = useState<string | null>(null)
-  const [ultimaVenta, setUltimaVenta] = useState<{ total: number; vuelto: number } | null>(null)
+  const [ultimaVenta, setUltimaVenta] = useState<{ venta: Venta; vuelto: number } | null>(null)
   const inputBusqueda = useRef<HTMLInputElement>(null)
 
   const resultados = useMemo(() => {
@@ -53,6 +57,11 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     if (!termino || pareceCodigoDeBarras(busqueda)) return []
     return (productos ?? []).filter((p) => normalizar(p.nombre).includes(termino)).slice(0, MAX_RESULTADOS)
   }, [productos, busqueda])
+
+  const sinCodigo = useMemo(
+    () => (productos ?? []).filter((p) => !p.codigo_barras).sort((a, b) => a.nombre.localeCompare(b.nombre)),
+    [productos],
+  )
 
   const enfocarBusqueda = () => {
     if (tienePunteroFino) setTimeout(() => inputBusqueda.current?.focus())
@@ -67,7 +76,8 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     setBusqueda('')
     setCodigoDesconocido(null)
     setUltimaVenta(null)
-    if (producto.unidad === 'kg') setModal({ tipo: 'peso', producto })
+    if (producto.precio_libre) setModal({ tipo: 'monto', producto })
+    else if (producto.unidad === 'kg') setModal({ tipo: 'peso', producto })
     else carrito.agregarProducto(producto)
   }
 
@@ -94,7 +104,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     const items = carrito.items.map(({ unidad: _unidad, ...item }) => item)
     const venta = await registrarVenta(cajaId, items, pagos)
     const efectivo = pagos.find((p) => p.recibido !== null)
-    setUltimaVenta({ total: venta.total, vuelto: efectivo ? efectivo.recibido! - efectivo.monto : 0 })
+    setUltimaVenta({ venta, vuelto: efectivo ? efectivo.recibido! - efectivo.monto : 0 })
     carrito.vaciar()
     cerrarModal()
   }
@@ -132,13 +142,28 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
                     className={`flex w-full justify-between px-4 py-3 text-left hover:bg-slate-50 ${indice === 0 ? 'bg-slate-50' : ''}`}
                   >
                     <span className="truncate">{producto.nombre}</span>
-                    <span className="ml-3 shrink-0 font-semibold tabular-nums">{formatearPesos(producto.precio_venta)}</span>
+                    <span className="ml-3 shrink-0 font-semibold tabular-nums">{etiquetaPrecio(producto)}</span>
                   </button>
                 </li>
               ))}
             </ul>
           )}
         </div>
+
+        {sinCodigo.length > 0 && (
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1 md:flex-wrap md:overflow-visible">
+            {sinCodigo.map((producto) => (
+              <button
+                key={producto.id}
+                onClick={() => agregar(producto)}
+                className="shrink-0 rounded-lg bg-white px-3 py-2 text-left ring-1 ring-slate-200 hover:bg-slate-50"
+              >
+                <span className="block font-medium">{producto.nombre}</span>
+                <span className="block text-xs text-slate-500 tabular-nums">{etiquetaPrecio(producto)}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {codigoDesconocido && (
           <div className="mt-3 flex items-center justify-between gap-3 rounded-lg bg-red-50 px-4 py-3 text-red-800">
@@ -152,13 +177,19 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
         )}
 
         {ultimaVenta && !hayItems && (
-          <div className="mt-3 flex items-center justify-between rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900">
-            <span>✓ Venta de {formatearPesos(ultimaVenta.total)}</span>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg bg-emerald-50 px-4 py-3 text-emerald-900">
+            <span className="mr-auto">✓ Venta de {formatearPesos(ultimaVenta.venta.total)}</span>
             {ultimaVenta.vuelto > 0 && (
               <span className="text-lg">
                 Vuelto: <strong className="tabular-nums">{formatearPesos(ultimaVenta.vuelto)}</strong>
               </span>
             )}
+            <button
+              onClick={() => setModal({ tipo: 'ticket', venta: ultimaVenta.venta })}
+              className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-emerald-900 ring-1 ring-emerald-200 hover:bg-emerald-100"
+            >
+              🧾 Ticket
+            </button>
           </div>
         )}
 
@@ -219,6 +250,16 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
           }}
         />
       )}
+      {modal?.tipo === 'monto' && (
+        <ModalMonto
+          producto={modal.producto}
+          alCerrar={cerrarModal}
+          alConfirmar={(monto) => {
+            carrito.agregarPrecioLibre(modal.producto, monto)
+            cerrarModal()
+          }}
+        />
+      )}
       {modal?.tipo === 'varios' && (
         <ModalVarios
           alCerrar={cerrarModal}
@@ -240,6 +281,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
           }}
         />
       )}
+      {modal?.tipo === 'ticket' && <ModalTicket venta={modal.venta} alCerrar={cerrarModal} />}
       {modal?.tipo === 'camara' && (
         <EscanerCamara
           alCerrar={cerrarModal}
@@ -251,6 +293,11 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
       )}
     </div>
   )
+}
+
+function etiquetaPrecio(producto: Producto) {
+  if (producto.precio_libre) return 'Precio libre'
+  return formatearPesos(producto.precio_venta) + (producto.unidad === 'kg' ? ' /kg' : '')
 }
 
 interface LineaProps {

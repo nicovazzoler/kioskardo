@@ -97,3 +97,19 @@ def test_producto_por_kg_acepta_fracciones(cliente):
 
 def test_movimiento_de_producto_inexistente_da_404(cliente):
     assert mover_stock(cliente, uuid.uuid4(), "compra", 1).status_code == 404
+
+
+def test_precio_libre_arranca_apagado(cliente):
+    assert nuevo_producto(cliente)["precio_libre"] is False
+    fiambre = nuevo_producto(
+        cliente, codigo_barras=None, nombre="Fiambre", precio_venta=0, precio_libre=True
+    )
+    assert fiambre["precio_libre"] is True
+
+
+def test_precio_libre_por_kg_da_422(cliente):
+    respuesta = cliente.put(
+        f"/api/productos/{uuid.uuid4()}",
+        json={"nombre": "Fiambre", "precio_venta": 0, "unidad": "kg", "precio_libre": True},
+    )
+    assert respuesta.status_code == 422

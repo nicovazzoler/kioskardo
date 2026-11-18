@@ -11,12 +11,44 @@ Centavos = Annotated[int, Field(ge=0)]
 Cantidad = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
 
 
+class KioskoGuardar(BaseModel):
+    nombre: str = Field(min_length=1, max_length=120)
+    direccion: str | None = Field(default=None, max_length=200)
+    telefono: str | None = Field(default=None, max_length=50)
+    pie_ticket: str | None = Field(default=None, max_length=200)
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_sin_espacios_sobrantes(cls, valor: str) -> str:
+        valor = " ".join(valor.split())
+        if not valor:
+            raise ValueError("El nombre no puede estar vacío")
+        return valor
+
+    @field_validator("direccion", "telefono", "pie_ticket")
+    @classmethod
+    def vacio_es_none(cls, valor: str | None) -> str | None:
+        valor = " ".join(valor.split()) if valor else None
+        return valor or None
+
+
+class KioskoLeer(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    nombre: str
+    direccion: str | None
+    telefono: str | None
+    pie_ticket: str | None
+
+
 class ProductoGuardar(BaseModel):
     codigo_barras: str | None = Field(default=None, max_length=64)
     nombre: str = Field(min_length=1, max_length=200)
     precio_venta: Centavos
     costo: Centavos | None = None
     unidad: Unidad = Unidad.UNIDAD
+    precio_libre: bool = False
     stock_minimo: Cantidad = Decimal(0)
     activo: bool = True
 
@@ -34,6 +66,12 @@ class ProductoGuardar(BaseModel):
             raise ValueError("El nombre no puede estar vacío")
         return valor
 
+    @model_validator(mode="after")
+    def precio_libre_por_unidad(self) -> Self:
+        if self.precio_libre and self.unidad == Unidad.KG:
+            raise ValueError("Un producto de precio libre se vende por unidad, no por kg")
+        return self
+
 
 class ProductoLeer(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -44,6 +82,7 @@ class ProductoLeer(BaseModel):
     precio_venta: int
     costo: int | None
     unidad: Unidad
+    precio_libre: bool
     # float y no Decimal: Pydantic serializa Decimal como string y el frontend espera números.
     stock_minimo: float
     activo: bool

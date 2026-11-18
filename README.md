@@ -3,8 +3,9 @@
 Punto de venta para kioscos. Funciona en celular, tablet y PC como PWA (web instalable) y sigue
 vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
 
-> **Estado: en pausa.** Las fases 1 a 4 están terminadas y probadas. Faltan la pantalla del cliente
-> en vivo (fase 5) y la impresión de tickets (fase 6).
+> **Estado: en desarrollo.** Las fases 1 a 4 están terminadas y probadas. La impresión de tickets
+> (fase 6) está hecha pero falta probarla con la impresora real. Falta la pantalla del cliente en
+> vivo (fase 5).
 
 Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
 
@@ -12,17 +13,20 @@ Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
 
 - **Venta:** escaneo con pistola lectora o con la cámara del celular, búsqueda sin importar tildes,
   productos por peso ("$500 de caramelos"), ítems "Varios" de monto libre y cobro con hasta dos
-  medios de pago, con cálculo de vuelto.
+  medios de pago, con cálculo de vuelto. Los productos sin código aparecen como botones rápidos;
+  los de precio libre (fiambre, pan) piden el monto al venderlos.
 - **Inventario:** alta rápida escaneando el código, stock calculado a partir de movimientos (compra,
   merma, ajuste) y margen de ganancia por producto.
 - **Caja:** apertura con monto inicial, ingresos y egresos de efectivo, anulación de ventas, cierre
   con arqueo (contado contra esperado) e historial de cierres.
+- **Ticket:** vista previa después de cada venta y desde la caja, impresión en comandera térmica
+  Bluetooth de 58 u 80 mm a través de la app RawBT. Los datos del negocio se cargan en Ajustes.
 - **Offline:** todo se guarda primero en el dispositivo y se sube al servidor cuando hay conexión.
 
 ## Pendiente
 
 - **Fase 5:** pantalla del cliente en otro dispositivo, en tiempo real (WebSocket).
-- **Fase 6:** impresión de tickets en impresora térmica Bluetooth.
+- **Fase 6:** probar el ticket con la impresora que compre el kiosco (acentos, ancho, corte).
 - Más adelante: empleados y turnos, panel para un dueño con varios kioscos.
 
 ## Estructura

@@ -6,12 +6,25 @@ export type MotivoStock = 'compra' | 'venta' | 'ajuste' | 'merma'
 export type MedioPago = 'efectivo' | 'debito' | 'credito' | 'transferencia' | 'qr'
 export type TipoMovimientoCaja = 'ingreso' | 'egreso'
 
+export interface KioskoGuardar {
+  nombre: string
+  direccion: string | null
+  telefono: string | null
+  pie_ticket: string | null
+}
+
+export interface Kiosko extends KioskoGuardar {
+  id: string
+}
+
 export interface ProductoGuardar {
   codigo_barras: string | null
   nombre: string
   precio_venta: number
   costo: number | null
   unidad: Unidad
+  // El precio se tipea al vender (ej: fiambre, con el monto que marca la balanza).
+  precio_libre: boolean
   stock_minimo: number
   activo: boolean
 }
