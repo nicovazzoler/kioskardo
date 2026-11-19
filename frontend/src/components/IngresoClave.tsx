@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { ErrorApi, pedirApi } from '../lib/api'
-import { claseInput } from '../lib/estilos'
+import { botonPrimario, claseInput } from '../lib/estilos'
 import { guardarToken } from '../lib/sesion'
 import { sincronizar } from '../lib/sincronizacion'
 
@@ -26,13 +26,13 @@ export function IngresoClave() {
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-100 p-4">
-      <form onSubmit={ingresar} className="w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 shadow-lg ring-1 ring-slate-200">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-fondo p-4">
+      <form onSubmit={ingresar} className="w-full max-w-sm space-y-4 rounded-3xl border border-borde bg-panel p-6 shadow-2xl">
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="" className="h-10 w-10" />
           <div>
-            <h1 className="text-xl font-bold">Kioskardo</h1>
-            <p className="text-sm text-slate-500">Ingresá la clave del kiosco</p>
+            <h1 className="font-display text-2xl font-semibold">Kioskardo</h1>
+            <p className="text-sm text-tenue">Ingresá la clave del kiosco</p>
           </div>
         </div>
         <input
@@ -47,11 +47,11 @@ export function IngresoClave() {
           aria-label="Clave del kiosco"
           className={claseInput(!!error)}
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button type="submit" disabled={!clave || enviando} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        {error && <p className="text-sm text-error">{error}</p>}
+        <button type="submit" disabled={!clave || enviando} className={`${botonPrimario} w-full py-3`}>
           Entrar
         </button>
-        <p className="text-center text-xs text-slate-400">Se pide una sola vez en cada dispositivo.</p>
+        <p className="text-center text-xs text-tenue">Se pide una sola vez en cada dispositivo.</p>
       </form>
     </div>
   )

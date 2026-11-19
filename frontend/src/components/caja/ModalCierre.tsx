@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
-import { formatearPesos, parsearPesos } from '../../lib/dinero'
-import { claseInput } from '../../lib/estilos'
+import { formatearPesosCorto, parsearPesos } from '../../lib/dinero'
+import { botonPrimario, claseInput } from '../../lib/estilos'
 import { Campo, InputPesos } from '../Campos'
 import { Modal } from '../Modal'
 import { Diferencia } from './Diferencia'
@@ -25,23 +25,24 @@ export function ModalCierre({ esperado, alConfirmar, alCerrar }: Props) {
   return (
     <Modal titulo="Cerrar caja" alCerrar={alCerrar}>
       <form onSubmit={confirmar} className="space-y-4">
-        <div className="flex items-baseline justify-between rounded-lg bg-slate-50 px-4 py-3">
-          <span className="text-slate-600">Debería haber</span>
-          <span className="text-xl font-bold tabular-nums">{formatearPesos(esperado)}</span>
+        <p className="text-tinta-suave">Contá la plata del cajón y anotá cuánto hay. La app te dice si sobra o falta.</p>
+        <div className="flex items-baseline justify-between rounded-2xl bg-elevado px-4 py-3">
+          <span>Debería haber</span>
+          <span className="font-display text-3xl font-semibold tabular-nums">{formatearPesosCorto(esperado)}</span>
         </div>
         <Campo etiqueta="Efectivo contado" ayuda="Contá solo los billetes y monedas del cajón.">
           <InputPesos autoFocus valor={texto} alCambiar={setTexto} />
         </Campo>
         {contado !== null && (
-          <div className="flex items-baseline justify-between px-1">
-            <span className="text-slate-600">Diferencia</span>
+          <div className="flex items-baseline justify-between rounded-2xl bg-elevado px-4 py-3">
+            <span>Diferencia</span>
             <Diferencia monto={contado - esperado} grande />
           </div>
         )}
         <Campo etiqueta="Nota (opcional)">
           <textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2} className={claseInput()} placeholder="Ej: faltante por un vuelto mal dado" />
         </Campo>
-        <button type="submit" disabled={contado === null} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={contado === null} className={`${botonPrimario} w-full py-4 text-lg`}>
           Cerrar caja
         </button>
       </form>

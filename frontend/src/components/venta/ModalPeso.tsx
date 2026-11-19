@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { formatearCantidad, redondearGramos } from '../../lib/cantidad'
 import { formatearPesos, parsearPesos } from '../../lib/dinero'
-import { claseInput } from '../../lib/estilos'
+import { botonPrimario, claseInput } from '../../lib/estilos'
 import type { Producto } from '../../lib/modelos'
 import { calcularSubtotal } from '../../lib/ventas'
 import { Campo, InputPesos } from '../Campos'
@@ -43,7 +43,7 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
   return (
     <Modal titulo={producto.nombre} alCerrar={alCerrar}>
       <form onSubmit={confirmar} className="space-y-4">
-        <p className="text-sm text-slate-500">{formatearPesos(producto.precio_venta)} el kilo</p>
+        <p className="text-sm text-tenue">{formatearPesos(producto.precio_venta)} el kilo</p>
         <div className="grid grid-cols-2 gap-2">
           {(['peso', 'monto'] as const).map((m) => (
             <button
@@ -53,7 +53,7 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
                 setModo(m)
                 setTexto('')
               }}
-              className={`rounded-lg border py-2 font-medium ${modo === m ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-300 text-slate-600'}`}
+              className={`rounded-xl border py-2 font-medium ${modo === m ? 'border-tinta bg-tinta text-fondo' : 'border-borde text-tenue'}`}
             >
               {m === 'peso' ? 'Por peso' : 'Por monto'}
             </button>
@@ -70,12 +70,12 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
           </Campo>
         )}
 
-        <div className="flex items-baseline justify-between rounded-lg bg-slate-50 px-4 py-3">
-          <span className="text-slate-600">{valido ? formatearCantidad(cantidad!, 'kg') : '—'}</span>
+        <div className="flex items-baseline justify-between rounded-xl bg-elevado px-4 py-3">
+          <span className="text-tenue">{valido ? formatearCantidad(cantidad!, 'kg') : '—'}</span>
           <span className="text-xl font-bold tabular-nums">{subtotal ? formatearPesos(subtotal) : '—'}</span>
         </div>
 
-        <button type="submit" disabled={!valido} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={!valido} className={`${botonPrimario} w-full py-3`}>
           Agregar
         </button>
       </form>

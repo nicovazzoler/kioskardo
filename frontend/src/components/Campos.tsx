@@ -14,9 +14,9 @@ export function Campo({ etiqueta, error, ayuda, grupo, children }: CampoProps) {
   const Contenedor = grupo ? 'div' : 'label'
   return (
     <Contenedor className="block">
-      <span className="mb-1 block text-sm font-medium text-slate-700">{etiqueta}</span>
+      <span className="mb-1.5 block text-sm text-tenue">{etiqueta}</span>
       {children}
-      {error ? <span className="mt-1 block text-sm text-red-600">{error}</span> : ayuda && <span className="mt-1 block text-sm text-slate-500">{ayuda}</span>}
+      {error ? <span className="mt-1 block text-sm text-error">{error}</span> : ayuda && <span className="mt-1 block text-sm text-tenue">{ayuda}</span>}
     </Contenedor>
   )
 }
@@ -32,7 +32,7 @@ interface InputPesosProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'v
 export function InputPesos({ ref, valor, alCambiar, error = false, className = '', ...resto }: InputPesosProps) {
   return (
     <div className="relative">
-      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-slate-400">$</span>
+      <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-tenue">$</span>
       <input
         ref={ref}
         value={valor}

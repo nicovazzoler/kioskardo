@@ -46,20 +46,22 @@ La pistola "tipea" rápido y manda Enter. Este hook escucha el teclado y disting
 pistola de una persona por la velocidad entre teclas. Fijate en `MAX_MS_ENTRE_TECLAS`.
 
 **2. La pantalla recibe el código.** `frontend/src/pages/VentaPage.tsx`
-- `useEscaner(procesarCodigo, ...)` (línea 82) conecta el hook con la pantalla.
-- `procesarCodigo` (línea 74) busca el producto en IndexedDB.
-- `agregar` (línea 66) decide: si se vende por kg abre el modal de peso; si no, lo suma al carrito.
+- `useEscaner(procesarCodigo, ...)` (línea 121) conecta el hook con la pantalla.
+- `procesarCodigo` (línea 113) busca el producto en IndexedDB.
+- `agregar` (línea 104) decide: si es de precio libre pide el monto, si se vende por kg abre el
+  modal de peso, y si no, lo suma al carrito. Tocar una tarjeta de la grilla llega al mismo `agregar`.
 
 **3. Se suma al carrito.** `frontend/src/hooks/useCarrito.ts`
 `agregarProducto` (línea 34): si el producto ya está en el carrito, suma 1; si no, crea una
 línea. Mirá cómo **nunca modifica** el array: siempre crea uno nuevo (`[...actuales, nuevo]`,
 `.map`, `.filter`). En React eso es obligatorio para que se note el cambio.
 
-**4. Se cobra.** `frontend/src/components/venta/ModalCobro.tsx`
-Tiene dos variantes, `PagoSimple` y `PagoDividido`. Las dos terminan en `alConfirmar(pagos)`:
-el modal **no sabe** qué pasa después; eso lo decide quien lo abrió.
+**4. Se cobra.** `frontend/src/components/venta/PanelVenta.tsx`
+El panel muestra la venta, el medio de pago elegido y el botón Cobrar. El "¿paga con?" está en
+`VueltoOpcional.tsx` y no es obligatorio. El panel **no sabe** qué pasa al cobrar: solo llama a
+`alCobrar`, y eso lo decide `VentaPage`. Pagar con dos medios va aparte, en `ModalDosMedios.tsx`.
 
-**5. Se registra la venta.** `VentaPage.tsx` → `cobrar` (línea 93) → `frontend/src/lib/ventas.ts` → `registrarVenta` (línea 15)
+**5. Se registra la venta.** `VentaPage.tsx` → `cobrar` (línea 123) → `frontend/src/lib/ventas.ts` → `registrarVenta` (línea 15)
 - Guarda la venta en IndexedDB y descuenta el stock local. La pantalla se actualiza al instante.
 - Llama a `encolar(...)`: todavía no se mandó nada al servidor.
 
@@ -150,17 +152,18 @@ pendiente en IndexedDB, volvé a "Online" y mirá cómo sale el `PUT` y desapare
 
 Ordenados de menor a mayor dificultad. Cada uno toca una sola capa.
 
-1. **Texto.** En `ModalCobro.tsx`, cambiá "Confirmar venta" por "Cobrar". Mirá cómo se
+1. **Texto.** En `PanelVenta.tsx`, cambiá "Pagar con dos medios" por "Dos medios". Mirá cómo se
    actualiza sin recargar (eso es el *hot reload* de Vite).
 2. **Constante.** En `lib/mediosPago.ts`, agregá el billete de $500 a `BILLETES`. Actualizá
    el test que se rompe.
-3. **Estilo.** En `VentaPage.tsx`, hacé que el total se ponga rojo si supera $50.000
-   (pista: una clase condicional como la de `tieneStockBajo` en `InventarioPage`).
+3. **Estilo.** En `PanelVenta.tsx`, hacé que el total se ponga ámbar (`text-ambar`) si supera
+   $50.000 (pista: una clase condicional como la de `tieneStockBajo` en `InventarioPage`).
 4. **Validación backend.** Que el nombre de un producto no pueda tener menos de 2 letras.
    Tocá `esquemas.py` y agregá un test en `test_productos.py`.
-5. **Componente nuevo.** En Inventario, mostrá arriba de la lista cuántos productos hay y
-   cuántos tienen stock bajo (pista: se calcula a partir de `productos`, no hace falta estado nuevo).
-6. **Campo nuevo de punta a punta.** Agregá "categoría" (texto opcional) a los productos:
+5. **Componente nuevo.** En Caja, mostrá en la tarjeta de ventas cuál fue la venta más grande
+   del día (pista: se calcula a partir de `ventas`, no hace falta estado nuevo).
+6. **Campo nuevo de punta a punta.** Agregá "proveedor" (texto opcional) a los productos, como
+   se hizo con la categoría:
    `modelos.py` → migración con `alembic revision --autogenerate` → `esquemas.py` →
    `lib/modelos.ts` → `FormularioProducto.tsx`. Es el ejercicio que más enseña, porque pasa
    por todas las capas.

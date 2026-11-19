@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { registrarMovimiento } from '../../lib/cajas'
 import { parsearPesos } from '../../lib/dinero'
-import { claseInput } from '../../lib/estilos'
+import { botonPrimario, claseInput } from '../../lib/estilos'
 import type { TipoMovimientoCaja } from '../../lib/modelos'
 import { Campo, InputPesos } from '../Campos'
 import { Modal } from '../Modal'
@@ -42,12 +42,12 @@ export function ModalMovimiento({ cajaId, tipo, alCerrar }: Props) {
         </Campo>
         <div className="flex flex-wrap gap-2">
           {SUGERENCIAS[tipo].map((sugerencia) => (
-            <button key={sugerencia} type="button" onClick={() => setMotivo(sugerencia)} className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-700">
+            <button key={sugerencia} type="button" onClick={() => setMotivo(sugerencia)} className="rounded-full bg-elevado px-3 py-1.5 text-sm text-tinta-suave">
               {sugerencia}
             </button>
           ))}
         </div>
-        <button type="submit" disabled={!valido} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={!valido} className={`${botonPrimario} w-full py-3`}>
           Registrar {tipo}
         </button>
       </form>

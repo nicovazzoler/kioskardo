@@ -9,9 +9,9 @@ type Estado = 'verificando' | 'conectado' | 'sin-conexion'
 const INTERVALO_MS = 30_000
 
 const ESTILOS: Record<Estado, { punto: string; texto: string }> = {
-  verificando: { punto: 'bg-slate-400', texto: 'Verificando…' },
-  conectado: { punto: 'bg-emerald-500', texto: 'En línea' },
-  'sin-conexion': { punto: 'bg-red-500', texto: 'Sin conexión' },
+  verificando: { punto: 'bg-apagado', texto: 'Verificando…' },
+  conectado: { punto: 'bg-ok', texto: 'En línea' },
+  'sin-conexion': { punto: 'bg-error', texto: 'Sin conexión' },
 }
 
 // Indicador de conexión con el backend y de cambios que todavía no se subieron.
@@ -39,7 +39,7 @@ export function EstadoConexion() {
   }, [])
 
   return (
-    <span className="inline-flex items-center gap-3 text-sm text-slate-600">
+    <span className="inline-flex flex-wrap items-center gap-2 text-sm text-tenue">
       {rechazados.length > 0 && (
         <button
           onClick={() => {
@@ -48,12 +48,12 @@ export function EstadoConexion() {
               void descartarRechazados()
             }
           }}
-          className="rounded-full bg-red-50 px-2.5 py-0.5 font-medium text-red-700"
+          className="rounded-full bg-error px-2.5 py-0.5 font-medium text-fondo"
         >
           ⚠ {rechazados.length} con error
         </button>
       )}
-      {enCola > 0 && <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-amber-800">{enCola} sin subir</span>}
+      {enCola > 0 && <span className="rounded-full bg-ambar px-2.5 py-0.5 font-medium text-fondo">{enCola} sin subir</span>}
       <span className="inline-flex items-center gap-2">
         <span className={`h-2.5 w-2.5 rounded-full ${ESTILOS[estado].punto}`} />
         {ESTILOS[estado].texto}

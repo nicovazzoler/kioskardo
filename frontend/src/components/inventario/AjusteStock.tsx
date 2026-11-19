@@ -1,14 +1,15 @@
 import { useState, type FormEvent } from 'react'
 import { formatearCantidad, parsearCantidad } from '../../lib/cantidad'
+import { botonPrimario } from '../../lib/estilos'
 import type { MovimientoStockCrear, Producto } from '../../lib/modelos'
 import { moverStock } from '../../lib/productos'
 
 type Motivo = MovimientoStockCrear['motivo']
 
 const ACCIONES: { motivo: Motivo; boton: string; pregunta: string }[] = [
-  { motivo: 'compra', boton: '+ Ingreso', pregunta: '¿Cuántos entraron?' },
+  { motivo: 'compra', boton: '+ Compra', pregunta: '¿Cuántos entraron?' },
   { motivo: 'merma', boton: '− Merma', pregunta: '¿Cuántos se perdieron o rompieron?' },
-  { motivo: 'ajuste', boton: '= Corregir', pregunta: '¿Cuántos hay realmente?' },
+  { motivo: 'ajuste', boton: 'Corregir', pregunta: '¿Cuántos hay realmente?' },
 ]
 
 export function AjusteStock({ producto }: { producto: Producto }) {
@@ -17,6 +18,7 @@ export function AjusteStock({ producto }: { producto: Producto }) {
 
   const cantidad = parsearCantidad(texto, producto.unidad)
   const accion = ACCIONES.find((a) => a.motivo === motivo)
+  const bajo = producto.stock <= 0 || producto.stock <= producto.stock_minimo
 
   const confirmar = async (evento: FormEvent) => {
     evento.preventDefault()
@@ -27,20 +29,24 @@ export function AjusteStock({ producto }: { producto: Producto }) {
   }
 
   return (
-    <section className="rounded-xl bg-slate-50 p-4">
+    <section className="space-y-3 rounded-2xl bg-elevado p-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-sm text-slate-600">Stock actual</span>
-        <span className="text-2xl font-bold tabular-nums">{formatearCantidad(producto.stock, producto.unidad)}</span>
+        <span className="text-sm text-tenue">Stock</span>
+        <span className={`font-display text-3xl font-semibold tabular-nums ${bajo ? 'text-ambar' : ''}`}>{formatearCantidad(producto.stock, producto.unidad)}</span>
       </div>
+      {bajo && producto.stock_minimo > 0 && (
+        <p className="text-xs text-tinta-suave">Por debajo del mínimo de {formatearCantidad(producto.stock_minimo, producto.unidad)}</p>
+      )}
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-1.5">
         {ACCIONES.map((a) => (
           <button
             key={a.motivo}
             type="button"
             onClick={() => setMotivo(motivo === a.motivo ? null : a.motivo)}
-            className={`rounded-lg border px-2 py-2 text-sm font-medium ${
-              motivo === a.motivo ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-200 bg-white text-slate-700'
+            aria-pressed={motivo === a.motivo}
+            className={`rounded-xl py-2 text-sm font-semibold ${
+              motivo === a.motivo ? 'bg-tinta text-fondo' : a.motivo === 'compra' ? 'bg-salvia text-fondo' : 'border border-borde hover:bg-borde'
             }`}
           >
             {a.boton}
@@ -50,16 +56,16 @@ export function AjusteStock({ producto }: { producto: Producto }) {
 
       {accion && (
         // Un form aparte (no anidado en el del producto) para que Enter confirme solo el movimiento.
-        <form onSubmit={confirmar} className="mt-3 flex gap-2">
+        <form onSubmit={confirmar} className="flex gap-2">
           <input
             autoFocus
             inputMode="decimal"
             placeholder={accion.pregunta}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2"
+            className="min-w-0 flex-1 rounded-xl border border-borde bg-fondo px-3 py-2 outline-none placeholder:text-apagado focus:border-ambar"
           />
-          <button type="submit" disabled={cantidad === null} className="rounded-lg bg-marca-700 px-4 font-medium text-white disabled:opacity-40">
+          <button type="submit" disabled={cantidad === null} className={`${botonPrimario} px-4`}>
             OK
           </button>
         </form>

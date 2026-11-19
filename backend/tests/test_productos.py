@@ -113,3 +113,13 @@ def test_precio_libre_por_kg_da_422(cliente):
         json={"nombre": "Fiambre", "precio_venta": 0, "unidad": "kg", "precio_libre": True},
     )
     assert respuesta.status_code == 422
+
+
+def test_categoria_opcional_y_de_la_lista(cliente):
+    assert nuevo_producto(cliente)["categoria"] is None
+    assert nuevo_producto(cliente, codigo_barras="1", categoria="bebidas")["categoria"] == "bebidas"
+    respuesta = cliente.put(
+        f"/api/productos/{uuid.uuid4()}",
+        json={"nombre": "Algo", "precio_venta": 100, "categoria": "cualquiera"},
+    )
+    assert respuesta.status_code == 422

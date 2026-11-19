@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { parsearPesos } from '../../lib/dinero'
 import type { Producto } from '../../lib/modelos'
 import { Campo, InputPesos } from '../Campos'
+import { botonPrimario } from '../../lib/estilos'
 import { Modal } from '../Modal'
 
 interface Props {
@@ -25,7 +26,7 @@ export function ModalMonto({ producto, alConfirmar, alCerrar }: Props) {
         <Campo etiqueta="Monto" ayuda="El que marca la etiqueta o la balanza.">
           <InputPesos autoFocus valor={texto} alCambiar={setTexto} />
         </Campo>
-        <button type="submit" disabled={!monto} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={!monto} className={`${botonPrimario} w-full py-3`}>
           Agregar
         </button>
       </form>

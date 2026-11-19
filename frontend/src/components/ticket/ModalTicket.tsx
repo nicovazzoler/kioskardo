@@ -14,13 +14,13 @@ export function ModalTicket({ venta, alCerrar }: { venta: Venta; alCerrar: () =>
 
   return (
     <Modal titulo="Ticket" alCerrar={alCerrar}>
-      <div className="overflow-x-auto bg-slate-100 py-4">
+      <div className="overflow-x-auto rounded-2xl bg-elevado py-5">
         <VistaTicket lineas={lineas} columnas={columnas} />
       </div>
-      <button autoFocus onClick={() => imprimir(lineas)} className="mt-4 w-full rounded-lg bg-marca-700 py-3 text-lg font-semibold text-white hover:bg-marca-800">
+      <button autoFocus onClick={() => imprimir(lineas)} className="mt-4 w-full rounded-xl bg-tinta py-3 text-lg font-semibold text-fondo hover:bg-white">
         🖨️ Imprimir
       </button>
-      <p className="mt-2 text-center text-xs text-slate-500">Se imprime con la app RawBT. Los datos del negocio y el papel se cambian en Ajustes.</p>
+      <p className="mt-2 text-center text-xs text-tenue">Se imprime con la app RawBT. Los datos del negocio y el papel se cambian en Ajustes.</p>
     </Modal>
   )
 }

@@ -30,6 +30,17 @@ class Unidad(enum.StrEnum):
     KG = "kg"
 
 
+class Categoria(enum.StrEnum):
+    BEBIDAS = "bebidas"
+    GOLOSINAS = "golosinas"
+    SNACKS = "snacks"
+    CIGARRILLOS = "cigarrillos"
+    ALMACEN = "almacen"
+    LACTEOS = "lacteos"
+    FIAMBRERIA = "fiambreria"
+    OTROS = "otros"
+
+
 class MotivoStock(enum.StrEnum):
     COMPRA = "compra"
     VENTA = "venta"
@@ -101,6 +112,8 @@ class Producto(Base):
     unidad: Mapped[Unidad] = mapped_column(columna_enum(Unidad), default=Unidad.UNIDAD)
     # El precio se tipea al vender (ej: fiambre, con el monto que marca la balanza).
     precio_libre: Mapped[bool] = mapped_column(default=False, server_default=false())
+    # None = sin categoría: el producto aparece igual en "Todos" y en la búsqueda.
+    categoria: Mapped[Categoria | None] = mapped_column(columna_enum(Categoria))
     stock_minimo: Mapped[Decimal] = mapped_column(Numeric(12, 3), default=0)
     # Los productos no se borran (las ventas viejas los referencian): se desactivan.
     activo: Mapped[bool] = mapped_column(default=True)

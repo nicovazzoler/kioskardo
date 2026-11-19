@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => ({
         short_name: 'Kioskardo',
         description: 'Punto de venta para kioscos',
         lang: 'es-AR',
-        theme_color: '#0f766e',
-        background_color: '#f8fafc',
+        theme_color: '#1c1916',
+        background_color: '#1c1916',
         display: 'standalone',
         start_url: '/',
         icons: [
@@ -31,6 +31,7 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // La API nunca se cachea acá: los datos offline se manejan aparte, con IndexedDB.
         navigateFallbackDenylist: [/^\/api/],
       },

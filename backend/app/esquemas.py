@@ -5,7 +5,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from app.modelos import MedioPago, TipoMovimientoCaja, Unidad
+from app.modelos import Categoria, MedioPago, TipoMovimientoCaja, Unidad
 
 Centavos = Annotated[int, Field(ge=0)]
 Cantidad = Annotated[Decimal, Field(ge=0, max_digits=12, decimal_places=3)]
@@ -57,6 +57,7 @@ class ProductoGuardar(BaseModel):
     costo: Centavos | None = None
     unidad: Unidad = Unidad.UNIDAD
     precio_libre: bool = False
+    categoria: Categoria | None = None
     stock_minimo: Cantidad = Decimal(0)
     activo: bool = True
 
@@ -91,6 +92,7 @@ class ProductoLeer(BaseModel):
     costo: int | None
     unidad: Unidad
     precio_libre: bool
+    categoria: Categoria | None
     # float y no Decimal: Pydantic serializa Decimal como string y el frontend espera números.
     stock_minimo: float
     activo: bool

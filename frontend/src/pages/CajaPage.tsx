@@ -13,6 +13,7 @@ import { db } from '../lib/db'
 import { formatearFechaHora } from '../lib/fechas'
 import type { Caja, ResumenCaja, TipoMovimientoCaja } from '../lib/modelos'
 import { calcularResumen } from '../lib/resumenCaja'
+import { botonPrimario, botonSecundario } from '../lib/estilos'
 
 export function CajaPage() {
   const caja = useCajaAbierta()
@@ -57,17 +58,17 @@ function CajaAbierta({ caja, alCerrar }: Props) {
     <section className="mx-auto max-w-5xl p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Caja</h1>
-          <p className="text-sm text-slate-500">Abierta desde {formatearFechaHora(caja.abierta_en)}</p>
+          <h1 className="font-display text-3xl font-semibold">Caja</h1>
+          <p className="text-sm text-tenue">Abierta desde {formatearFechaHora(caja.abierta_en)}</p>
         </div>
-        <div className="flex w-full gap-2 text-sm md:w-auto md:text-base">
-          <button onClick={() => setModal('ingreso')} className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 md:flex-none">
+        <div className="flex w-full gap-2 text-sm md:w-auto">
+          <button onClick={() => setModal('ingreso')} className={`${botonSecundario} h-11 flex-1 px-4 md:flex-none`}>
             + Ingreso
           </button>
-          <button onClick={() => setModal('egreso')} className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-medium text-slate-700 md:flex-none">
+          <button onClick={() => setModal('egreso')} className={`${botonSecundario} h-11 flex-1 px-4 md:flex-none`}>
             − Egreso
           </button>
-          <button onClick={() => setModal('cierre')} className="flex-1 whitespace-nowrap rounded-lg bg-marca-700 px-4 py-2.5 font-semibold text-white md:flex-none">
+          <button onClick={() => setModal('cierre')} className={`${botonPrimario} h-11 flex-1 rounded-xl px-5 whitespace-nowrap md:flex-none`}>
             Cerrar caja
           </button>
         </div>
@@ -82,9 +83,10 @@ function CajaAbierta({ caja, alCerrar }: Props) {
           <button
             key={p}
             onClick={() => setPestania(p)}
-            className={`rounded-full px-4 py-1.5 text-sm font-medium ${pestania === p ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'}`}
+            aria-pressed={pestania === p}
+            className={`rounded-full px-4 py-2 text-sm font-semibold ${pestania === p ? 'bg-tinta text-fondo' : 'border border-borde text-tinta-suave hover:bg-elevado'}`}
           >
-            {p === 'ventas' ? `Ventas (${ventas.length})` : `Ingresos y egresos (${movimientos.length})`}
+            {p === 'ventas' ? `Ventas ${ventas.length}` : `Ingresos y egresos ${movimientos.length}`}
           </button>
         ))}
       </div>

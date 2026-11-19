@@ -1,11 +1,11 @@
 import type { MedioPago } from './modelos'
 
-export const MEDIOS_PAGO: { valor: MedioPago; nombre: string; icono: string }[] = [
-  { valor: 'efectivo', nombre: 'Efectivo', icono: '💵' },
-  { valor: 'debito', nombre: 'Débito', icono: '💳' },
-  { valor: 'credito', nombre: 'Crédito', icono: '💳' },
-  { valor: 'transferencia', nombre: 'Transferencia', icono: '🏦' },
-  { valor: 'qr', nombre: 'QR', icono: '📱' },
+export const MEDIOS_PAGO: { valor: MedioPago; nombre: string; corto: string; color: string }[] = [
+  { valor: 'efectivo', nombre: 'Efectivo', corto: 'Efectivo', color: 'bg-salvia' },
+  { valor: 'debito', nombre: 'Débito', corto: 'Débito', color: 'bg-celeste' },
+  { valor: 'credito', nombre: 'Crédito', corto: 'Crédito', color: 'bg-rosa' },
+  { valor: 'transferencia', nombre: 'Transferencia', corto: 'Transf.', color: 'bg-lavanda' },
+  { valor: 'qr', nombre: 'QR', corto: 'QR', color: 'bg-manteca' },
 ]
 
 export function nombreMedio(medio: MedioPago): string {

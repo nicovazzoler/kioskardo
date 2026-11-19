@@ -3,12 +3,14 @@ import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { parsearCantidad } from '../../lib/cantidad'
 import { centavosATexto, formatearPesos, parsearPesos } from '../../lib/dinero'
 import { db } from '../../lib/db'
-import type { Producto, Unidad } from '../../lib/modelos'
+import { CATEGORIAS } from '../../lib/categorias'
+import type { Categoria, Producto, Unidad } from '../../lib/modelos'
 import { buscarPorCodigo, guardarProducto, moverStock } from '../../lib/productos'
 import { nuevoId } from '../../lib/uuid'
 import { camaraDisponible } from '../../lib/camara'
-import { claseInput } from '../../lib/estilos'
+import { botonPrimario, botonSecundario, claseInput, claseOpcion } from '../../lib/estilos'
 import { EscanerCamara } from '../EscanerCamara'
+import { IconoCamara } from '../Iconos'
 import { Modal } from '../Modal'
 import { Campo, InputPesos } from '../Campos'
 import { AjusteStock } from './AjusteStock'
@@ -22,6 +24,8 @@ interface Props {
   // Si está, se llama al terminar un alta con el id nuevo (ej: la venta lo agrega al carrito).
   // En ese caso no se ofrece "Guardar y cargar otro".
   alCrear?: (id: string) => void
+  // En tablet, Inventario lo muestra como panel al costado de la lista en vez de en un modal.
+  comoPanel?: boolean
 }
 
 type SeVendePor = Unidad | 'libre'
@@ -38,6 +42,7 @@ interface Campos {
   precio: string
   costo: string
   seVendePor: SeVendePor
+  categoria: Categoria | null
   stockInicial: string
   stockMinimo: string
 }
@@ -49,31 +54,55 @@ function camposDesde(producto: Producto | undefined, codigoInicial = ''): Campos
     precio: centavosATexto(producto?.precio_venta ?? null),
     costo: centavosATexto(producto?.costo ?? null),
     seVendePor: producto?.precio_libre ? 'libre' : (producto?.unidad ?? 'unidad'),
+    categoria: producto?.categoria ?? null,
     stockInicial: '',
     stockMinimo: producto?.stock_minimo ? String(producto.stock_minimo) : '',
   }
 }
 
-export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEditarOtro, alCrear }: Props) {
+export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEditarOtro, alCrear, comoPanel }: Props) {
   const producto = useLiveQuery(() => (productoId ? db.productos.get(productoId) : undefined), [productoId])
   const esAlta = !productoId
 
   // Mientras el producto carga desde IndexedDB, no se muestra el formulario vacío.
   if (!esAlta && !producto) return null
 
-  return (
-    <Modal titulo={esAlta ? 'Nuevo producto' : 'Editar producto'} alCerrar={alCerrar}>
+  const titulo = esAlta ? 'Nuevo producto' : 'Editar producto'
+  const contenido = (
+    <>
       {producto && !producto.precio_libre && <AjusteStock producto={producto} />}
       <Formulario
         // key: al cambiar de producto, React descarta el formulario anterior y arranca uno limpio.
-        key={productoId ?? 'nuevo'}
+        key={productoId ?? `nuevo-${codigoInicial ?? ''}`}
         producto={producto}
         codigoInicial={codigoInicial}
         alCerrar={alCerrar}
         alEditarOtro={alEditarOtro}
         alCrear={alCrear}
       />
-    </Modal>
+    </>
+  )
+
+  if (!comoPanel) {
+    return (
+      <Modal titulo={titulo} alCerrar={alCerrar}>
+        {contenido}
+      </Modal>
+    )
+  }
+  return (
+    <section aria-label={titulo}>
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs text-tenue">{titulo}</p>
+          {producto && <h2 className="font-display text-2xl leading-tight font-semibold">{producto.nombre}</h2>}
+        </div>
+        <button onClick={alCerrar} aria-label="Cerrar" className={`${botonSecundario} flex h-10 w-10 shrink-0 items-center justify-center text-2xl leading-none text-tenue`}>
+          ×
+        </button>
+      </header>
+      {contenido}
+    </section>
   )
 }
 
@@ -137,6 +166,7 @@ function Formulario({
       costo,
       unidad,
       precio_libre: precioLibre,
+      categoria: campos.categoria,
       stock_minimo: stockMinimo!,
       activo: producto?.activo ?? true,
     })
@@ -148,8 +178,8 @@ function Formulario({
     if (esAlta) alCrear?.(id)
     if (!cargarOtro) return alCerrar()
     setUltimoGuardado(campos.nombre.trim())
-    // Se conserva cómo se vende: al cargar mercadería suelen venir varios productos del mismo tipo.
-    setCampos({ ...camposDesde(undefined), seVendePor: campos.seVendePor })
+    // Se conserva cómo se vende y la categoría: al cargar mercadería suelen venir varios productos del mismo tipo.
+    setCampos({ ...camposDesde(undefined), seVendePor: campos.seVendePor, categoria: campos.categoria })
     setIntentoGuardar(false)
     inputCodigo.current?.focus()
   }
@@ -164,7 +194,7 @@ function Formulario({
   return (
     <form onSubmit={(e) => guardar(e, false)} className="mt-4 space-y-4" noValidate>
       {ultimoGuardado && (
-        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">✓ Guardado: {ultimoGuardado}</p>
+        <p className="rounded-xl bg-salvia/15 px-3 py-2 text-sm text-salvia">✓ Guardado: {ultimoGuardado}</p>
       )}
 
       <Campo etiqueta="Código de barras" ayuda="Escaneá con la pistola o la cámara. Vacío si no tiene.">
@@ -179,13 +209,13 @@ function Formulario({
             className={claseInput(hayDuplicado)}
           />
           {camaraDisponible && (
-            <button type="button" onClick={() => setCamara(true)} className="rounded-lg border border-slate-300 px-3 text-xl" aria-label="Escanear con cámara">
-              📷
+            <button type="button" onClick={() => setCamara(true)} className={`${botonSecundario} px-3`} aria-label="Escanear con cámara">
+              <IconoCamara />
             </button>
           )}
         </div>
         {hayDuplicado && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1 text-sm text-error">
             Ya existe: <strong>{duplicado.nombre}</strong>.{' '}
             {alEditarOtro && (
               <button type="button" className="underline" onClick={() => alEditarOtro(duplicado)}>
@@ -222,16 +252,32 @@ function Formulario({
         </div>
       )}
 
+      <Campo etiqueta="Categoría" grupo>
+        <div className="flex flex-wrap gap-1.5">
+          {CATEGORIAS.map((c) => (
+            <button
+              key={c.valor}
+              type="button"
+              onClick={() => cambiar('categoria', campos.categoria === c.valor ? null : c.valor)}
+              aria-pressed={campos.categoria === c.valor}
+              className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
+                campos.categoria === c.valor ? `${c.color} text-fondo` : 'border border-borde text-tinta-suave hover:bg-elevado'
+              }`}
+            >
+              {c.nombre}
+            </button>
+          ))}
+        </div>
+      </Campo>
+
       <Campo etiqueta="Se vende por" grupo ayuda={precioLibre ? 'Al venderlo se tipea el monto. No lleva stock.' : undefined}>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-1 rounded-xl bg-fondo p-1">
           {OPCIONES_VENTA.map((opcion) => (
             <button
               key={opcion.valor}
               type="button"
               onClick={() => cambiar('seVendePor', opcion.valor)}
-              className={`rounded-lg border py-2 font-medium ${
-                campos.seVendePor === opcion.valor ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-300 text-slate-600'
-              }`}
+              className={`rounded-lg py-2 text-sm font-semibold ${claseOpcion(campos.seVendePor === opcion.valor)}`}
             >
               {opcion.nombre}
             </button>
@@ -265,19 +311,19 @@ function Formulario({
       )}
 
       {intentoGuardar && !precioLibre && precio === 0 && (
-        <p className="text-sm text-amber-700">Ojo: el precio es {formatearPesos(0)}.</p>
+        <p className="text-sm text-ambar">Ojo: el precio es {formatearPesos(0)}.</p>
       )}
 
       <div className="flex flex-col gap-2 pt-2 md:flex-row-reverse">
-        <button type="submit" className="flex-1 rounded-lg bg-marca-700 py-3 font-semibold text-white hover:bg-marca-800">
+        <button type="submit" className={`${botonPrimario} flex-1 py-3`}>
           Guardar
         </button>
         {esAlta ? (
-          !alCrear && <button type="button" onClick={(e) => guardar(e, true)} className="flex-1 rounded-lg border border-marca-700 py-3 font-semibold text-marca-700">
+          !alCrear && <button type="button" onClick={(e) => guardar(e, true)} className={`${botonSecundario} flex-1 py-3`}>
             Guardar y cargar otro
           </button>
         ) : (
-          <button type="button" onClick={cambiarActivo} className="flex-1 rounded-lg border border-slate-300 py-3 text-slate-600">
+          <button type="button" onClick={cambiarActivo} className={`${botonSecundario} flex-1 py-3 text-tenue`}>
             {producto.activo ? 'Desactivar producto' : 'Reactivar producto'}
           </button>
         )}

@@ -10,6 +10,17 @@ export function formatearPesos(centavos: number): string {
   return formateador.format(centavos / 100)
 }
 
+const formateadorSinCentavos = new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  maximumFractionDigits: 0,
+})
+
+// Para la pantalla: "$ 2.500" en vez de "$ 2.500,00". Si hay centavos, se muestran.
+export function formatearPesosCorto(centavos: number): string {
+  return centavos % 100 === 0 ? formateadorSinCentavos.format(centavos / 100) : formatearPesos(centavos)
+}
+
 // Texto para precargar un input de precio: 150050 -> "1500,50", 150000 -> "1500".
 export function centavosATexto(centavos: number | null): string {
   if (centavos === null) return ''
