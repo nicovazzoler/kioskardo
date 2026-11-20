@@ -1,43 +1,43 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useState } from 'react'
 import { DetalleResumen } from '../components/caja/DetalleResumen'
-import { HistorialCierres } from '../components/caja/HistorialCierres'
 import { ListaMovimientos } from '../components/caja/ListaMovimientos'
 import { ListaVentas } from '../components/caja/ListaVentas'
 import { ModalCierre } from '../components/caja/ModalCierre'
 import { ModalMovimiento } from '../components/caja/ModalMovimiento'
 import { ResultadoCierre } from '../components/caja/ResultadoCierre'
+import { EnElTurno } from '../components/turnos/EnElTurno'
 import { AbrirCaja } from '../components/venta/AbrirCaja'
+import { useAhora } from '../hooks/useAhora'
 import { cerrarCaja, useCajaAbierta } from '../lib/cajas'
 import { db } from '../lib/db'
-import { formatearFechaHora } from '../lib/fechas'
-import type { Caja, ResumenCaja, TipoMovimientoCaja } from '../lib/modelos'
+import { formatearDia, formatearDuracion, formatearHora, minutosEntre } from '../lib/fechas'
+import type { Caja, Presencia, ResumenCaja, TipoMovimientoCaja } from '../lib/modelos'
 import { calcularResumen } from '../lib/resumenCaja'
 import { botonPrimario, botonSecundario, claseOpcion } from '../lib/estilos'
 
 export function CajaPage() {
   const caja = useCajaAbierta()
   // Al cerrar, la caja deja de estar abierta; se guarda una foto para mostrar el resultado.
-  const [cierre, setCierre] = useState<{ caja: Caja; resumen: ResumenCaja } | null>(null)
+  const [cierre, setCierre] = useState<Cierre | null>(null)
 
-  if (cierre) return <ResultadoCierre caja={cierre.caja} resumen={cierre.resumen} alTerminar={() => setCierre(null)} />
+  if (cierre) return <ResultadoCierre {...cierre} alTerminar={() => setCierre(null)} />
   if (caja === undefined) return null
-  if (caja === null) {
-    return (
-      <section className="mx-auto max-w-4xl p-4 md:p-6">
-        <AbrirCaja />
-        <HistorialCierres />
-      </section>
-    )
-  }
-  return <CajaAbierta caja={caja} alCerrar={(cerrada, resumen) => setCierre({ caja: cerrada, resumen })} />
+  if (caja === null) return <AbrirCaja />
+  return <CajaAbierta caja={caja} alCerrar={setCierre} />
+}
+
+interface Cierre {
+  caja: Caja
+  resumen: ResumenCaja
+  presencias: Presencia[]
 }
 
 type Pestania = 'ventas' | 'movimientos'
 
 interface Props {
   caja: Caja
-  alCerrar: (cerrada: Caja, resumen: ResumenCaja) => void
+  alCerrar: (cierre: Cierre) => void
 }
 
 function CajaAbierta({ caja, alCerrar }: Props) {
@@ -45,13 +45,15 @@ function CajaAbierta({ caja, alCerrar }: Props) {
   const movimientos = useLiveQuery(() => db.movimientosCaja.where('caja_id').equals(caja.id).reverse().sortBy('creado_en'), [caja.id])
   const [pestania, setPestania] = useState<Pestania>('ventas')
   const [modal, setModal] = useState<TipoMovimientoCaja | 'cierre' | null>(null)
+  const ahora = useAhora()
 
   if (!ventas || !movimientos) return null
   const resumen = calcularResumen(caja, ventas, movimientos)
 
   const cerrar = async (montoContado: number, nota: string | null) => {
     const cerrada = await cerrarCaja(caja, montoContado, nota)
-    alCerrar(cerrada, resumen)
+    const presencias = await db.presencias.where('caja_id').equals(caja.id).sortBy('entrada')
+    alCerrar({ caja: cerrada, resumen, presencias })
   }
 
   return (
@@ -59,7 +61,9 @@ function CajaAbierta({ caja, alCerrar }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Caja</h1>
-          <p className="text-sm text-tenue">Abierta desde {formatearFechaHora(caja.abierta_en)}</p>
+          <p className="text-sm text-tenue">
+            Turno abierto el {formatearDia(caja.abierta_en)} a las {formatearHora(caja.abierta_en)} · lleva {formatearDuracion(minutosEntre(caja.abierta_en, ahora))}
+          </p>
         </div>
         <div className="flex w-full gap-1 text-sm md:w-auto">
           <button onClick={() => setModal('ingreso')} className={`${botonSecundario} h-11 flex-1 px-3 md:flex-none`}>
@@ -69,10 +73,12 @@ function CajaAbierta({ caja, alCerrar }: Props) {
             − Egreso
           </button>
           <button onClick={() => setModal('cierre')} className={`${botonPrimario} ml-1 h-11 flex-1 px-5 whitespace-nowrap md:flex-none`}>
-            Cerrar caja
+            Cerrar turno
           </button>
         </div>
       </div>
+
+      <EnElTurno cajaId={caja.id} />
 
       <div className="mt-5">
         <DetalleResumen montoInicial={caja.monto_inicial} resumen={resumen} />

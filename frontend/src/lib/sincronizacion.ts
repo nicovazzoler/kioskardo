@@ -1,10 +1,11 @@
 import { ErrorApi, pedirApi } from './api'
 import { db, type Pendiente } from './db'
-import type { Caja, Kiosko, MovimientoCaja, Producto, Venta } from './modelos'
+import type { Caja, Empleado, Kiosko, MovimientoCaja, Presencia, Producto, Venta } from './modelos'
 
 const INTERVALO_MS = 15_000
 
 let enCurso: Promise<void> | null = null
+let repetir = false
 
 export async function encolar(
   metodo: Pendiente['metodo'],
@@ -17,15 +18,23 @@ export async function encolar(
 }
 
 // Sube los pendientes en orden y, si no queda ninguno, baja los datos actualizados.
-// Si ya hay una sincronización corriendo, devuelve esa misma en vez de arrancar otra.
+// Si ya hay una corriendo, devuelve esa y se repite al terminar: lo encolado mientras tanto no espera al próximo ciclo.
 export function sincronizar(): Promise<void> {
-  enCurso ??= subirPendientes()
+  if (enCurso) {
+    repetir = true
+    return enCurso
+  }
+  enCurso = subirPendientes()
     .then((quedanPendientes) => (quedanPendientes ? undefined : bajarDatos()))
     .catch(() => {
       // Sin conexión o servidor caído: se reintenta en el próximo ciclo.
     })
     .finally(() => {
       enCurso = null
+      if (repetir) {
+        repetir = false
+        void sincronizar()
+      }
     })
   return enCurso
 }
@@ -54,26 +63,30 @@ async function subirPendientes(): Promise<boolean> {
 }
 
 async function bajarDatos() {
-  const [kiosko, productos, caja] = await Promise.all([
+  const [kiosko, productos, empleados, caja] = await Promise.all([
     pedirApi<Kiosko>('/kiosko'),
     pedirApi<Producto[]>('/productos'),
+    pedirApi<Empleado[]>('/empleados'),
     pedirApi<Caja | null>('/cajas/abierta'),
   ])
-  // Localmente se guardan solo las ventas y movimientos de la caja abierta.
-  const [ventas, movimientos] = caja
+  // Localmente se guardan solo las ventas, movimientos y presencias de la caja abierta.
+  const [ventas, movimientos, presencias] = caja
     ? await Promise.all([
         pedirApi<Venta[]>(`/cajas/${caja.id}/ventas`),
         pedirApi<MovimientoCaja[]>(`/cajas/${caja.id}/movimientos`),
+        pedirApi<Presencia[]>(`/cajas/${caja.id}/presencias`),
       ])
-    : [[], []]
+    : [[], [], []]
 
-  const tablas = [db.kiosko, db.productos, db.cajas, db.ventas, db.movimientosCaja, db.pendientes]
+  const tablas = [db.kiosko, db.productos, db.empleados, db.cajas, db.ventas, db.movimientosCaja, db.presencias, db.pendientes]
   await db.transaction('rw', tablas, async () => {
     // Si mientras bajaban los datos se hizo un cambio local, no se pisa: se baja en el próximo ciclo.
     if ((await db.pendientes.filter((p) => !p.error).count()) > 0) return
     await db.kiosko.put(kiosko)
     await db.productos.clear()
     await db.productos.bulkPut(productos)
+    await db.empleados.clear()
+    await db.empleados.bulkPut(empleados)
     // Localmente solo interesa la caja abierta; si se cerró en otro dispositivo, desaparece.
     await db.cajas.clear()
     if (caja) await db.cajas.put(caja)
@@ -81,6 +94,8 @@ async function bajarDatos() {
     await db.ventas.bulkPut(ventas)
     await db.movimientosCaja.clear()
     await db.movimientosCaja.bulkPut(movimientos)
+    await db.presencias.clear()
+    await db.presencias.bulkPut(presencias)
   })
 }
 

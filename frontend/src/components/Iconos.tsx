@@ -82,3 +82,10 @@ export const IconoTilde = (p: PropsIcono) => (
     <path d="m5 12.5 4.5 4.5L19 7.5" />
   </Icono>
 )
+
+export const IconoCandado = (p: PropsIcono) => (
+  <Icono {...p}>
+    <rect x="5" y="11" width="14" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </Icono>
+)

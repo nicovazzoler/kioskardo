@@ -9,6 +9,6 @@ export function useKiosko() {
 }
 
 export async function guardarKiosko(id: string, datos: KioskoGuardar) {
-  await db.kiosko.put({ ...datos, id })
+  await db.kiosko.update(id, datos)
   await encolar('PUT', '/kiosko', datos, 'kiosko')
 }

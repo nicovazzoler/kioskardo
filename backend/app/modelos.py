@@ -86,6 +86,21 @@ class Kiosko(Base):
     direccion: Mapped[str | None] = mapped_column(String(200))
     telefono: Mapped[str | None] = mapped_column(String(50))
     pie_ticket: Mapped[str | None] = mapped_column(String(200))
+    # SHA-256 del código de admin, calculado en el dispositivo. Sin código, Admin queda abierto.
+    codigo_admin_hash: Mapped[str | None] = mapped_column(String(64))
+    creado_en: Mapped[datetime] = columna_creado_en()
+
+
+class Empleado(Base):
+    """No tiene usuario ni clave: se lo marca al abrir el turno para saber quién trabajó."""
+
+    __tablename__ = "empleados"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    kiosko_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("kioskos.id"))
+    nombre: Mapped[str] = mapped_column(String(80))
+    # Dar de baja no borra: sus horas tienen que seguir apareciendo en el historial.
+    activo: Mapped[bool] = mapped_column(server_default=text("true"))
     creado_en: Mapped[datetime] = columna_creado_en()
 
 
@@ -160,6 +175,23 @@ class Caja(Base):
     # Lo que se contó físicamente al cerrar. El esperado se calcula con ventas y movimientos.
     monto_contado: Mapped[int | None] = mapped_column(BigInteger)
     nota: Mapped[str | None] = mapped_column(String(500))
+
+
+class Presencia(Base):
+    """Un empleado en un turno (una caja), de la entrada a la salida: de acá salen las horas.
+    Si entra tarde o se va antes, tiene sus propios horarios; si vuelve, es otra presencia.
+    """
+
+    __tablename__ = "presencias"
+    __table_args__ = (CheckConstraint("salida >= entrada", name="salida_despues_de_entrada"),)
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    kiosko_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("kioskos.id"))
+    caja_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cajas.id"), index=True)
+    empleado_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("empleados.id"), index=True)
+    entrada: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    # None mientras sigue en el turno. Al cerrar la caja se completa con la hora de cierre.
+    salida: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class Venta(Base):

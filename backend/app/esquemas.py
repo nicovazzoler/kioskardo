@@ -48,6 +48,50 @@ class KioskoLeer(BaseModel):
     direccion: str | None
     telefono: str | None
     pie_ticket: str | None
+    codigo_admin_hash: str | None
+
+
+class CodigoAdminGuardar(BaseModel):
+    # None quita el código: Admin queda abierto.
+    hash: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
+class EmpleadoGuardar(BaseModel):
+    nombre: str = Field(min_length=1, max_length=80)
+    activo: bool = True
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_sin_espacios_sobrantes(cls, valor: str) -> str:
+        valor = " ".join(valor.split())
+        if not valor:
+            raise ValueError("El nombre no puede estar vacío")
+        return valor
+
+
+class EmpleadoLeer(EmpleadoGuardar):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+
+
+class PresenciaGuardar(BaseModel):
+    empleado_id: uuid.UUID
+    entrada: datetime
+    salida: datetime | None = None
+
+    @model_validator(mode="after")
+    def salida_despues_de_entrada(self) -> Self:
+        if self.salida is not None and self.salida < self.entrada:
+            raise ValueError("La salida no puede ser antes de la entrada")
+        return self
+
+
+class PresenciaLeer(PresenciaGuardar):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    caja_id: uuid.UUID
 
 
 class ProductoGuardar(BaseModel):
@@ -144,6 +188,7 @@ class ResumenCaja(BaseModel):
 
 class CajaConResumen(CajaLeer):
     resumen: ResumenCaja
+    presencias: list[PresenciaLeer]
 
 
 class MovimientoCajaCrear(BaseModel):

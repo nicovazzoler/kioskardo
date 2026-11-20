@@ -16,6 +16,24 @@ export interface KioskoGuardar {
 
 export interface Kiosko extends KioskoGuardar {
   id: string
+  // SHA-256 del código de admin. null: todavía no hay código y Admin queda abierto.
+  codigo_admin_hash: string | null
+}
+
+export interface Empleado {
+  id: string
+  nombre: string
+  activo: boolean
+}
+
+// Un empleado en un turno (una caja): si entra tarde o se va antes, tiene sus propios horarios.
+export interface Presencia {
+  id: string
+  caja_id: string
+  empleado_id: string
+  entrada: string
+  // null mientras sigue en el turno.
+  salida: string | null
 }
 
 export interface ProductoGuardar {
@@ -75,6 +93,7 @@ export interface ResumenCaja {
 
 export interface CajaConResumen extends Caja {
   resumen: ResumenCaja
+  presencias: Presencia[]
 }
 
 export interface Venta {

@@ -23,7 +23,7 @@ export function ModalCierre({ esperado, alConfirmar, alCerrar }: Props) {
   }
 
   return (
-    <Modal titulo="Cerrar caja" alCerrar={alCerrar}>
+    <Modal titulo="Cerrar turno" alCerrar={alCerrar}>
       <form onSubmit={confirmar} className="space-y-4">
         <p className="text-tinta-suave">Contá la plata del cajón y anotá cuánto hay. La app te dice si sobra o falta.</p>
         <div className="flex items-baseline justify-between border-y border-linea py-3">
@@ -43,7 +43,7 @@ export function ModalCierre({ esperado, alConfirmar, alCerrar }: Props) {
           <textarea value={nota} onChange={(e) => setNota(e.target.value)} rows={2} className={claseInput()} placeholder="Ej: faltante por un vuelto mal dado" />
         </Campo>
         <button type="submit" disabled={contado === null} className={`${botonPrimario} w-full py-4 text-lg`}>
-          Cerrar caja
+          Cerrar turno
         </button>
       </form>
     </Modal>

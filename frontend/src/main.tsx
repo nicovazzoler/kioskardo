@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { AppLayout } from './layouts/AppLayout'
 import { SinMenuLayout } from './layouts/SinMenuLayout'
+import { AdminPage } from './pages/AdminPage'
 import { AjustesPage } from './pages/AjustesPage'
 import { iniciarSincronizacion } from './lib/sincronizacion'
 import { CajaPage } from './pages/CajaPage'
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: '/inventario', element: <InventarioPage /> },
       { path: '/caja', element: <CajaPage /> },
       { path: '/ajustes', element: <AjustesPage /> },
+      { path: '/admin', element: <AdminPage /> },
     ],
   },
   // Van en otro dispositivo, a pantalla completa: sin menú.

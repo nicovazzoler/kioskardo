@@ -15,10 +15,15 @@ vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
   es opcional. Hasta dos medios de pago en una venta.
 - **Inventario:** alta rápida escaneando el código, stock calculado a partir de movimientos (compra,
   merma, ajuste) y margen de ganancia por producto.
-- **Caja:** apertura con monto inicial, ingresos y egresos de efectivo, anulación de ventas, cierre
-  con arqueo (contado contra esperado) e historial de cierres.
+- **Turnos y caja:** el turno es la caja: se abre con el efectivo del cajón y marcando quiénes
+  trabajan. Durante el turno se suma al que entra tarde o se anota al que se va antes; ingresos y
+  egresos de efectivo, anulación de ventas. Al cerrar se hace el arqueo (contado contra esperado),
+  se ven las horas de cada uno y se puede abrir el turno siguiente con la plata contada.
+- **Admin:** detrás de un código de 4 números, sin usuarios. Historial de turnos y horas por
+  empleado (semana, mes, mes anterior), empleados, datos del negocio y el código. El mismo código
+  se pide para anular una venta o cambiar el precio de un producto.
 - **Ticket:** vista previa después de cada venta y desde la caja, impresión en comandera térmica
-  Bluetooth de 58 u 80 mm a través de la app RawBT. Los datos del negocio se cargan en Ajustes.
+  Bluetooth de 58 u 80 mm a través de la app RawBT. Los datos del negocio se cargan en Admin.
 - **Otros dispositivos, en vivo:** una pantalla para el cliente que muestra la venta mientras se
   arma, el total y el vuelto; y un celu que escanea con la cámara y suma los productos a la venta
   de la tablet. Se eligen en Ajustes o manteniendo apretado el ícono de la app instalada.
@@ -27,7 +32,7 @@ vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
 ## Pendiente
 
 - **Fase 6:** probar el ticket con la impresora que compre el kiosco (acentos, ancho, corte).
-- Más adelante: empleados y turnos, panel para un dueño con varios kioscos.
+- Más adelante: panel para un dueño con varios kioscos.
 
 ## Estructura
 
@@ -113,7 +118,8 @@ python -m app.sembrador --rehacer  # borra productos, ventas y cajas, y siembra 
 ```
 
 Deja 25 productos con código de barras, precio, costo y stock, una semana de ventas con todos
-los medios de pago, seis cajas cerradas con arqueo y la de hoy abierta. Los datos son inventados
+los medios de pago, seis cajas cerradas con arqueo y la de hoy abierta, y cuatro empleados con
+sus horas en cada turno. Los datos son inventados
 y siempre los mismos: la semilla del azar está fija, así que dos corridas dan lo mismo.
 
 Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se niega a correr.
@@ -157,6 +163,18 @@ a la pantalla y al celu, y el celu le manda a la caja los códigos que escanea. 
 - Las salas viven en la memoria del servidor: funciona con un solo proceso de uvicorn (como
   arranca el `Dockerfile`). Con varios haría falta repartir los mensajes entre procesos (Redis).
 - El escáner usa el lector de códigos de Chrome en Android, igual que la cámara en la venta.
+
+## Turnos y horas
+
+- Un turno es una caja: un solo cajón para todos los que trabajan en él. No se anota quién hizo
+  cada venta, solo quién estaba.
+- Cada empleado tiene una presencia por turno, con entrada y salida. Las horas son la suma de
+  esas presencias; al cerrar el turno, el que seguía adentro sale a la hora del cierre.
+- Todo se muestra en hora de Argentina (UTC−3), aunque el dispositivo tenga otra zona.
+- El código de admin se guarda como SHA-256 y viaja a cada dispositivo para poder pedirlo sin
+  conexión. Es un freno para que nadie anule o cambie precios sin querer, no seguridad: con 4
+  números alcanza con probar. Si se olvida, se quita desde la base:
+  `UPDATE kioskos SET codigo_admin_hash = NULL;`
 
 ## Offline
 

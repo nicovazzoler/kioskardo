@@ -21,11 +21,13 @@ from app.db import SesionLocal
 from app.modelos import (
     Caja,
     Categoria,
+    Empleado,
     Kiosko,
     MedioPago,
     MotivoStock,
     MovimientoCaja,
     MovimientoStock,
+    Presencia,
     Producto,
     TipoMovimientoCaja,
     Unidad,
@@ -42,6 +44,8 @@ DIAS = 7
 HORA_APERTURA = time(7, 30)
 HORA_CIERRE = time(21, 15)
 MONTO_INICIAL = 3_000_000
+EMPLEADOS = ["Juan", "Ana", "Marta", "Luis"]
+CAMBIO_DE_TURNO = time(14, 30)
 # La caja de hoy llega hasta la hora en que se siembra, así que puede quedar con pocas horas
 # encima: igual tiene que mostrar movimiento.
 MINIMO_VENTAS_HOY = 12
@@ -236,7 +240,9 @@ def vaciar_datos(sesion: Session) -> None:
         VentaItem,
         Venta,
         MovimientoCaja,
+        Presencia,
         Caja,
+        Empleado,
         Producto,
     ):
         sesion.execute(delete(modelo))
@@ -427,6 +433,36 @@ def armar_compras(kiosko_id: uuid.UUID, primer_dia: datetime) -> list[Movimiento
     return movimientos
 
 
+def armar_presencias(
+    caja: Caja, empleados: dict[str, Empleado], apertura: datetime, fin: datetime, atras: int
+) -> list[Presencia]:
+    """Mañana: Juan o Luis hasta el cambio de turno. Tarde: Marta. Ana hace el día entero pero
+    entra media hora tarde. En el turno de hoy, el que sigue trabajando queda sin salida.
+    """
+    cambio = datetime.combine(apertura.date(), CAMBIO_DE_TURNO, tzinfo=ARGENTINA)
+    abierto = atras == 0
+    turnos = [
+        ("Juan" if atras % 3 else "Luis", apertura, cambio),
+        ("Ana", apertura + timedelta(minutes=30), fin),
+        ("Marta", cambio - timedelta(minutes=30), fin),
+    ]
+    presencias = []
+    for nombre, entrada, salida in turnos:
+        if entrada >= fin:
+            continue
+        sigue = abierto and salida >= fin
+        presencias.append(
+            Presencia(
+                kiosko_id=caja.kiosko_id,
+                caja_id=caja.id,
+                empleado_id=empleados[nombre].id,
+                entrada=entrada,
+                salida=None if sigue else min(salida, fin),
+            )
+        )
+    return presencias
+
+
 def sembrar(sesion: Session) -> None:
     kiosko = obtener_kiosko(sesion)
     ahora = datetime.now(ARGENTINA)
@@ -447,6 +483,10 @@ def sembrar(sesion: Session) -> None:
         )
         for indice, articulo in enumerate(CATALOGO, start=1)
     )
+
+    empleados = {nombre: Empleado(kiosko_id=kiosko.id, nombre=nombre) for nombre in EMPLEADOS}
+    sesion.add_all(empleados.values())
+    sesion.flush()
 
     ventas: list[Venta] = []
     for atras in range(DIAS - 1, -1, -1):
@@ -484,6 +524,8 @@ def sembrar(sesion: Session) -> None:
             MONTO_INICIAL + cobrado_en_efectivo(del_dia),
         )
         sesion.add_all(del_dia + movimientos)
+        hasta = fin if es_hoy else cierre
+        sesion.add_all(armar_presencias(caja, empleados, apertura, hasta, atras))
         if not es_hoy:
             cerrar_con_arqueo(caja, efectivo_esperado(caja, del_dia, movimientos), cierre)
 
@@ -523,6 +565,7 @@ def sembrar(sesion: Session) -> None:
     print(f"Productos: {len(CATALOGO)}")
     print(f"Ventas: {len(ventas)} en {DIAS} días, {en_pesos(vendido)} en total")
     print(f"Cajas: {DIAS - 1} cerradas con arqueo y la de hoy abierta")
+    print(f"Empleados: {', '.join(EMPLEADOS)}, con sus horas en cada turno")
 
 
 def main() -> None:
