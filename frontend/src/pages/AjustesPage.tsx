@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Campo } from '../components/Campos'
+import { IconoCamara, IconoPantalla } from '../components/Iconos'
 import { VistaTicket } from '../components/ticket/VistaTicket'
+import { camaraDisponible } from '../lib/camara'
 import { claseInput } from '../lib/estilos'
 import { guardarColumnas, imprimir, leerColumnas, PAPELES } from '../lib/impresora'
 import { guardarKiosko, useKiosko } from '../lib/kiosko'
@@ -34,7 +37,46 @@ export function AjustesPage() {
           Los datos del negocio se cargan la primera vez que la app se conecta al servidor. Revisá la conexión.
         </p>
       )}
+      <OtrosDispositivos />
     </section>
+  )
+}
+
+function OtrosDispositivos() {
+  return (
+    <div className="mt-6 space-y-4 rounded-3xl border border-linea bg-panel p-5">
+      <div>
+        <h2 className="font-display text-xl font-semibold">Usar este dispositivo como…</h2>
+        <p className="mt-1 text-sm text-tenue">Se conecta en vivo con la caja abierta en la tablet. Los dos necesitan internet.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link to="/pantalla" className="flex gap-3 rounded-2xl border border-borde p-4 hover:bg-elevado">
+          <IconoPantalla tamano={24} />
+          <span>
+            <span className="block font-semibold">Pantalla del cliente</span>
+            <span className="block text-sm text-tenue">Muestra lo que se va cobrando, el total y el vuelto.</span>
+          </span>
+        </Link>
+        {camaraDisponible ? (
+          <Link to="/escaner" className="flex gap-3 rounded-2xl border border-borde p-4 hover:bg-elevado">
+            <IconoCamara tamano={24} />
+            <span>
+              <span className="block font-semibold">Escáner para la caja</span>
+              <span className="block text-sm text-tenue">Lee códigos con la cámara y los suma a la venta de la tablet.</span>
+            </span>
+          </Link>
+        ) : (
+          <div className="flex gap-3 rounded-2xl border border-linea p-4 text-apagado">
+            <IconoCamara tamano={24} />
+            <span>
+              <span className="block font-semibold">Escáner para la caja</span>
+              <span className="block text-sm">Necesita Chrome en Android.</span>
+            </span>
+          </div>
+        )}
+      </div>
+      <p className="text-xs text-tenue">Con la app instalada, también aparecen al mantener apretado su ícono.</p>
+    </div>
   )
 }
 

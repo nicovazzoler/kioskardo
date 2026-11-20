@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
+from app import sesion as modulo_sesion
 from app.config import config
 from app.db import Base, obtener_sesion
 from app.main import app
@@ -22,6 +23,12 @@ engine = create_engine(URL_TEST)
 def sin_clave(monkeypatch):
     # Una CLAVE_ACCESO en el .env de desarrollo no tiene que romper los tests que no la prueban.
     monkeypatch.setattr(config, "clave_acceso", None)
+
+
+@pytest.fixture
+def con_clave(monkeypatch):
+    monkeypatch.setattr(config, "clave_acceso", "kiosco123")
+    monkeypatch.setattr(modulo_sesion.time, "sleep", lambda _: None)
 
 
 @pytest.fixture(scope="session")

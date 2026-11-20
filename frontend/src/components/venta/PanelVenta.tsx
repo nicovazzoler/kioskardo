@@ -1,6 +1,7 @@
 import type { Carrito, ItemCarrito } from '../../hooks/useCarrito'
 import { datosCategoria } from '../../lib/categorias'
 import { formatearPesosCorto } from '../../lib/dinero'
+import { describirLinea } from '../../lib/lineaVenta'
 import { botonPrimario, botonSecundario, claseOpcion } from '../../lib/estilos'
 import { MEDIOS_PAGO } from '../../lib/mediosPago'
 import type { MedioPago, Producto, Venta } from '../../lib/modelos'
@@ -123,14 +124,7 @@ function LineaVenta({ item, producto, carrito }: { item: ItemCarrito; producto: 
   const color = datosCategoria(producto?.categoria)?.color ?? 'bg-arena'
   const esPesable = item.unidad === 'kg'
   const esLibre = !producto || producto.precio_libre
-  const insignia = esPesable ? `${Math.round(item.cantidad * 1000)} g` : String(item.cantidad)
-  const detalle = esPesable
-    ? `${formatearPesosCorto(item.precio_unitario)} el kilo`
-    : !item.producto_id
-      ? 'Monto libre'
-      : esLibre
-        ? 'Precio libre'
-        : `${item.cantidad} × ${formatearPesosCorto(item.precio_unitario)}`
+  const { cantidad: insignia, detalle } = describirLinea(item, producto)
 
   return (
     <li className="flex gap-3 py-2.5">

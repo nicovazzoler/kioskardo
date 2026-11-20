@@ -1,5 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { EscanerCamara } from '../components/EscanerCamara'
 import { IconoBuscar, IconoCamara, IconoRecibo } from '../components/Iconos'
 import { ICONOS_CATEGORIA } from '../components/iconosPorTipo'
@@ -14,6 +14,7 @@ import { PanelVenta } from '../components/venta/PanelVenta'
 import { Modal } from '../components/Modal'
 import { useCarrito, type ItemCarrito } from '../hooks/useCarrito'
 import { useEscaner } from '../hooks/useEscaner'
+import { useVivo } from '../hooks/useVivo'
 import { useCajaAbierta } from '../lib/cajas'
 import { camaraDisponible } from '../lib/camara'
 import { formatearCantidad } from '../lib/cantidad'
@@ -21,11 +22,13 @@ import { CATEGORIAS, datosCategoria } from '../lib/categorias'
 import { db } from '../lib/db'
 import { formatearPesosCorto } from '../lib/dinero'
 import { botonPrimario, botonSecundario } from '../lib/estilos'
+import { describirLinea } from '../lib/lineaVenta'
 import type { Categoria, MedioPago, Producto, Venta, VentaPago } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
 import { nuevoId } from '../lib/uuid'
 import { registrarVenta } from '../lib/ventas'
+import type { VentaEnVivo } from '../lib/vivo'
 
 type ModalAbierto =
   | { tipo: 'peso'; producto: Producto }
@@ -62,7 +65,12 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   const [medio, setMedio] = useState<MedioPago>('efectivo')
   // Se guarda junto al total para el que se eligió: si después cambia la venta, deja de valer solo.
   const [pagaCon, setPagaCon] = useState<{ total: number; monto: number } | null>(null)
+  const [codigosDelCelu, setCodigosDelCelu] = useState<string[]>([])
+  const procesandoDelCelu = useRef(false)
   const inputBusqueda = useRef<HTMLInputElement>(null)
+  const { enviar: enviarEnVivo } = useVivo('caja', (mensaje) => {
+    if (mensaje.tipo === 'codigo') setCodigosDelCelu((cola) => [...cola, mensaje.codigo])
+  })
 
   const recibido = pagaCon?.total === carrito.total ? pagaCon.monto : null
   const hayItems = carrito.items.length > 0
@@ -119,6 +127,40 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   }
 
   useEscaner(procesarCodigo, modal === null)
+
+  // Con una ventana abierta los códigos del celu esperan: no pisan un peso a medio cargar.
+  const recibeDelCelu = modal === null || modal.tipo === 'hoja'
+
+  const procesarDelCelu = useEffectEvent((codigo: string) => procesarCodigo(codigo))
+
+  // De a uno: si el código abre una ventana (un producto por kg), los que siguen esperan a que se cierre.
+  useEffect(() => {
+    if (!recibeDelCelu || codigosDelCelu.length === 0 || procesandoDelCelu.current) return
+    procesandoDelCelu.current = true
+    void procesarDelCelu(codigosDelCelu[0]).finally(() => {
+      procesandoDelCelu.current = false
+      setCodigosDelCelu((cola) => cola.slice(1))
+    })
+  }, [recibeDelCelu, codigosDelCelu])
+
+  const ventaEnVivo = useMemo<VentaEnVivo>(
+    () => ({
+      items: carrito.items.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        subtotal: item.subtotal,
+        ...describirLinea(item, item.producto_id ? productoPorId.get(item.producto_id) : undefined),
+      })),
+      total: carrito.total,
+      recibido: medio === 'efectivo' ? recibido : null,
+      cobrada: ultimaVenta && { id: ultimaVenta.venta.id, total: ultimaVenta.venta.total, vuelto: ultimaVenta.vuelto },
+    }),
+    [carrito.items, carrito.total, medio, recibido, ultimaVenta, productoPorId],
+  )
+
+  useEffect(() => {
+    enviarEnVivo({ tipo: 'venta', venta: ventaEnVivo })
+  }, [ventaEnVivo, enviarEnVivo])
 
   const cobrar = async (pagos?: VentaPago[]) => {
     if (!hayItems) return

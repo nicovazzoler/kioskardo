@@ -42,9 +42,10 @@ def clave_correcta(clave: str) -> bool:
     return hmac.compare_digest(clave.encode(), config.clave_acceso.encode())
 
 
+def sesion_valida(token: str | None) -> bool:
+    return config.clave_acceso is None or token_valido(token or "")
+
+
 def exigir_sesion(authorization: Annotated[str | None, Header()] = None) -> None:
-    if config.clave_acceso is None:
-        return
-    token = (authorization or "").removeprefix("Bearer ")
-    if not token_valido(token):
+    if not sesion_valida((authorization or "").removeprefix("Bearer ")):
         raise HTTPException(401, "Hay que ingresar la clave del kiosco")
