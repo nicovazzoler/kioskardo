@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useConCodigo } from '../../hooks/useConCodigo'
 import { formatearCantidad } from '../../lib/cantidad'
 import { formatearPesos, formatearPesosCorto } from '../../lib/dinero'
 import { formatearHora } from '../../lib/fechas'
@@ -11,6 +12,7 @@ import { ModalTicket } from '../ticket/ModalTicket'
 
 export function ListaVentas({ ventas }: { ventas: Venta[] }) {
   const [ticket, setTicket] = useState<Venta | null>(null)
+  const { conCodigo, modalCodigo } = useConCodigo()
 
   if (ventas.length === 0) return <p className="py-8 text-center text-apagado">Todavía no hay ventas en esta caja.</p>
 
@@ -63,7 +65,13 @@ export function ListaVentas({ ventas }: { ventas: Venta[] }) {
                   </button>
                   {!venta.anulada && (
                     <button
-                      onClick={() => confirm(`¿Anular la venta de ${formatearPesos(venta.total)}? El stock vuelve al inventario.`) && anularVenta(venta)}
+                      onClick={() =>
+                        conCodigo({
+                          titulo: 'Anular venta',
+                          detalle: `La venta de ${formatearPesosCorto(venta.total)} deja de contar y el stock vuelve al inventario.`,
+                          accion: () => void anularVenta(venta),
+                        })
+                      }
                       className="rounded-md px-2 py-2 font-semibold text-error hover:bg-error/10"
                     >
                       Anular venta
@@ -76,6 +84,7 @@ export function ListaVentas({ ventas }: { ventas: Venta[] }) {
         ))}
       </ul>
       {ticket && <ModalTicket venta={ticket} alCerrar={() => setTicket(null)} />}
+      {modalCodigo}
     </>
   )
 }

@@ -1,7 +1,8 @@
 import { NavLink, Outlet } from 'react-router'
 import { EstadoConexion } from '../components/EstadoConexion'
-import { IconoAjustes, IconoCaja, IconoInventario, IconoPantalla, IconoVenta } from '../components/Iconos'
+import { IconoAjustes, IconoCaja, IconoCandado, IconoInventario, IconoPantalla, IconoVenta } from '../components/Iconos'
 import { IngresoClave } from '../components/IngresoClave'
+import { IndicadorTurno } from '../components/turnos/IndicadorTurno'
 import { useNecesitaClave } from '../lib/sesion'
 
 const SECCIONES = [
@@ -9,6 +10,7 @@ const SECCIONES = [
   { ruta: '/inventario', nombre: 'Inventario', Icono: IconoInventario },
   { ruta: '/caja', nombre: 'Caja', Icono: IconoCaja },
   { ruta: '/ajustes', nombre: 'Ajustes', Icono: IconoAjustes },
+  { ruta: '/admin', nombre: 'Admin', Icono: IconoCandado },
 ]
 
 // Celular: barra de navegación abajo, al alcance del pulgar.
@@ -49,6 +51,7 @@ export function AppLayout() {
             <IconoPantalla tamano={18} />
             Pantalla del cliente
           </a>
+          <IndicadorTurno />
           <EstadoConexion />
         </div>
       </nav>

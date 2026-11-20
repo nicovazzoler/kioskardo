@@ -1,5 +1,5 @@
 import { Dexie, type EntityTable } from 'dexie'
-import type { Caja, Kiosko, MovimientoCaja, Producto, Venta } from './modelos'
+import type { Caja, Empleado, Kiosko, MovimientoCaja, Presencia, Producto, Venta } from './modelos'
 
 // Una request a la API que todavía no llegó al servidor.
 export interface Pendiente {
@@ -8,7 +8,7 @@ export interface Pendiente {
   ruta: string
   cuerpo: unknown
   // Tabla local donde se guarda lo que responde el servidor.
-  destino: 'productos' | 'cajas' | 'ventas' | 'movimientosCaja' | 'kiosko'
+  destino: 'productos' | 'cajas' | 'ventas' | 'movimientosCaja' | 'kiosko' | 'empleados' | 'presencias'
   creado_en: string
   // Si el servidor la rechazó (4xx), queda acá con el motivo en vez de reintentarse para siempre.
   error?: string
@@ -21,6 +21,8 @@ export const db = new Dexie('kioskardo') as Dexie & {
   ventas: EntityTable<Venta, 'id'>
   movimientosCaja: EntityTable<MovimientoCaja, 'id'>
   kiosko: EntityTable<Kiosko, 'id'>
+  empleados: EntityTable<Empleado, 'id'>
+  presencias: EntityTable<Presencia, 'id'>
 }
 
 // Solo se declaran las columnas por las que se busca (índices), no todas.
@@ -39,4 +41,8 @@ db.version(3).stores({
 })
 db.version(4).stores({
   kiosko: 'id',
+})
+db.version(5).stores({
+  empleados: 'id, nombre',
+  presencias: 'id, caja_id',
 })

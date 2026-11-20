@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useConCodigo } from '../../hooks/useConCodigo'
 import { parsearCantidad } from '../../lib/cantidad'
 import { centavosATexto, formatearPesos, parsearPesos } from '../../lib/dinero'
 import { db } from '../../lib/db'
@@ -118,6 +119,7 @@ function Formulario({
   const [intentoGuardar, setIntentoGuardar] = useState(false)
   const [ultimoGuardado, setUltimoGuardado] = useState<string | null>(null)
   const [camara, setCamara] = useState(false)
+  const { conCodigo, modalCodigo } = useConCodigo()
   const inputCodigo = useRef<HTMLInputElement>(null)
   const inputNombre = useRef<HTMLInputElement>(null)
   const inputPrecio = useRef<HTMLInputElement>(null)
@@ -153,11 +155,18 @@ function Formulario({
     ;(campos.nombre ? inputPrecio : inputNombre).current?.focus()
   }
 
-  const guardar = async (evento: FormEvent, cargarOtro: boolean) => {
+  const guardar = (evento: FormEvent, cargarOtro: boolean) => {
     evento.preventDefault()
     setIntentoGuardar(true)
     if (!esValido) return
+    if (producto && precio !== producto.precio_venta) {
+      conCodigo({ titulo: 'Cambiar el precio', accion: () => void persistir(cargarOtro) })
+    } else {
+      void persistir(cargarOtro)
+    }
+  }
 
+  const persistir = async (cargarOtro: boolean) => {
     const id = producto?.id ?? nuevoId()
     await guardarProducto(id, {
       codigo_barras: codigo || null,
@@ -337,6 +346,7 @@ function Formulario({
         )}
       </div>
 
+      {modalCodigo}
       {camara && (
         <EscanerCamara
           alCerrar={() => setCamara(false)}

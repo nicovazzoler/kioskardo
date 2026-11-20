@@ -90,12 +90,28 @@ def test_tras_cerrar_se_puede_abrir_otra(cliente, caja):
     assert cliente.put(f"/api/cajas/{uuid.uuid4()}", json={"monto_inicial": 0}).status_code == 200
 
 
-def test_historial_lista_solo_cajas_cerradas(cliente, caja):
-    assert cliente.get("/api/cajas").json() == []
+def test_historial_trae_los_turnos_cerrados_y_el_abierto(cliente, caja):
     cerrar(cliente, caja, 1000000)
+    abierta = str(uuid.uuid4())
+    # En el test todo pasa en la misma transacción, con el mismo now(): la hora va explícita.
+    cliente.put(
+        f"/api/cajas/{abierta}",
+        json={"monto_inicial": 1000000, "abierta_en": "2030-01-01T08:00:00-03:00"},
+    )
     historial = cliente.get("/api/cajas").json()
-    assert [c["id"] for c in historial] == [caja["id"]]
-    assert historial[0]["resumen"]["efectivo_esperado"] == 1000000
+    assert [c["id"] for c in historial] == [abierta, caja["id"]]
+    assert historial[1]["resumen"]["efectivo_esperado"] == 1000000
+
+
+def test_historial_filtra_por_fecha_de_apertura(cliente):
+    for abierta_en in ["2026-10-31T20:00:00-03:00", "2026-11-01T08:00:00-03:00"]:
+        caja_id = str(uuid.uuid4())
+        cliente.put(f"/api/cajas/{caja_id}", json={"monto_inicial": 0, "abierta_en": abierta_en})
+        cliente.post(f"/api/cajas/{caja_id}/cerrar", json={"monto_contado": 0})
+
+    noviembre = {"desde": "2026-11-01T00:00:00-03:00", "hasta": "2026-12-01T00:00:00-03:00"}
+    historial = cliente.get("/api/cajas", params=noviembre).json()
+    assert [c["abierta_en"][:10] for c in historial] == ["2026-11-01"]
 
 
 def test_anular_venta_devuelve_stock_y_sale_del_resumen(cliente, caja):
