@@ -50,7 +50,9 @@ export function conectarVivo({ rol, alRecibir, alCambiarEstado }: Opciones) {
   // La caja la vuelve a mandar al reconectar: el servidor pudo haberse reiniciado y no tenerla.
   let ventaActual: VentaEnVivo | null = null
 
-  const mandar = (mensaje: object) => socket?.send(JSON.stringify(mensaje))
+  // El evento close puede tardar en llegar: mientras tanto el socket ya no está OPEN y send() falla.
+  const abierto = () => socket?.readyState === WebSocket.OPEN
+  const mandar = (mensaje: object) => abierto() && socket!.send(JSON.stringify(mensaje))
 
   const abrir = () => {
     clearTimeout(reintento)
@@ -113,7 +115,7 @@ export function conectarVivo({ rol, alRecibir, alCambiarEstado }: Opciones) {
     // Devuelve false si no llegó a salir: sin conexión el mensaje se pierde (salvo el estado de la venta).
     enviar(mensaje: MensajeCliente): boolean {
       if (mensaje.tipo === 'venta') ventaActual = mensaje.venta
-      if (!socket || !lista) return false
+      if (!lista || !abierto()) return false
       mandar(mensaje)
       return true
     },
