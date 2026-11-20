@@ -20,16 +20,16 @@ export function Modal({ titulo, alCerrar, children }: Props) {
       <div
         role="dialog"
         aria-label={titulo}
-        className="flex max-h-[95%] w-full flex-col rounded-t-3xl border border-borde bg-panel shadow-2xl md:max-w-lg md:rounded-3xl"
+        className="flex max-h-[95%] w-full flex-col rounded-t-lg border-t border-borde bg-panel shadow-2xl md:max-w-lg md:rounded-lg md:border"
         // Evita que un click adentro llegue al fondo y cierre el modal.
         onClick={(evento) => evento.stopPropagation()}
       >
         <header className="flex items-center justify-between px-6 pt-5 pb-3">
-          <h2 className="font-display text-2xl font-semibold">{titulo}</h2>
+          <h2 className="font-display text-2xl font-semibold tracking-tight">{titulo}</h2>
           <button
             type="button"
             onClick={alCerrar}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-borde text-2xl leading-none text-tenue hover:bg-elevado"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-md text-2xl leading-none text-tenue hover:bg-elevado hover:text-tinta"
             aria-label="Cerrar"
           >
             ×

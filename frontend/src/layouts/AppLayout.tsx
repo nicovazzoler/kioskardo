@@ -18,10 +18,10 @@ export function AppLayout() {
 
   return (
     <div className="flex h-full flex-col md:flex-row">
-      <nav className="order-last flex shrink-0 border-t border-linea bg-lateral pb-[env(safe-area-inset-bottom)] md:order-first md:w-52 md:flex-col md:gap-1 md:border-t-0 md:border-r md:px-4 md:py-5">
-        <div className="hidden items-center gap-2.5 px-2 pb-5 md:flex">
-          <img src="/logo.svg" alt="" className="h-9 w-9" />
-          <span className="font-display text-xl font-semibold">Kioskardo</span>
+      <nav className="order-last flex shrink-0 border-t border-linea bg-lateral pb-[env(safe-area-inset-bottom)] md:order-first md:w-48 md:flex-col md:border-t-0 md:border-r md:px-5 md:py-6">
+        <div className="hidden items-center gap-2.5 pb-6 md:flex">
+          <img src="/logo.svg" alt="" className="h-8 w-8" />
+          <span className="font-display text-xl font-semibold tracking-tight">Kioskardo</span>
         </div>
         {SECCIONES.map(({ ruta, nombre, Icono }) => (
           <NavLink
@@ -29,8 +29,8 @@ export function AppLayout() {
             to={ruta}
             end={ruta === '/'}
             className={({ isActive }) =>
-              `group flex flex-1 flex-col items-center gap-1 py-2 text-xs md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-[15px] ${
-                isActive ? 'font-semibold text-tinta md:bg-elevado' : 'text-tenue hover:text-tinta'
+              `group flex flex-1 flex-col items-center gap-1 py-2 text-xs md:flex-none md:flex-row md:gap-3 md:py-2.5 md:text-[15px] ${
+                isActive ? 'font-semibold text-tinta' : 'text-tenue hover:text-tinta'
               }`
             }
           >
@@ -44,20 +44,18 @@ export function AppLayout() {
             )}
           </NavLink>
         ))}
-        <div className="mt-auto hidden flex-col gap-3 md:flex">
-          <a href="/pantalla" target="_blank" className="flex items-center gap-2.5 rounded-xl border border-borde px-3 py-2.5 text-sm hover:bg-elevado">
+        <div className="mt-auto hidden flex-col gap-2 md:flex">
+          <a href="/pantalla" target="_blank" className="flex items-center gap-2.5 py-2.5 text-sm text-tinta-suave hover:text-tinta">
             <IconoPantalla tamano={18} />
             Pantalla del cliente
           </a>
-          <div className="px-2">
-            <EstadoConexion />
-          </div>
+          <EstadoConexion />
         </div>
       </nav>
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-linea px-4 py-3 md:hidden">
-          <span className="flex items-center gap-2 font-display text-lg font-semibold">
+          <span className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight">
             <img src="/logo.svg" alt="" className="h-7 w-7" />
             Kioskardo
           </span>

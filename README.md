@@ -3,11 +3,8 @@
 Punto de venta para kioscos. Funciona en celular, tablet y PC como PWA (web instalable) y sigue
 vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
 
-> **Estado: en desarrollo.** Las fases 1 a 4 están terminadas y probadas. La impresión de tickets
-> (fase 6) está hecha pero falta probarla con la impresora real. Falta la pantalla del cliente en
-> vivo (fase 5).
-
-Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
+> **Estado: en desarrollo.** Las fases 1 a 5 están terminadas y probadas. La impresión de tickets
+> (fase 6) está hecha pero falta probarla con la impresora real.
 
 ## Qué hace
 
@@ -22,11 +19,13 @@ Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
   con arqueo (contado contra esperado) e historial de cierres.
 - **Ticket:** vista previa después de cada venta y desde la caja, impresión en comandera térmica
   Bluetooth de 58 u 80 mm a través de la app RawBT. Los datos del negocio se cargan en Ajustes.
+- **Otros dispositivos, en vivo:** una pantalla para el cliente que muestra la venta mientras se
+  arma, el total y el vuelto; y un celu que escanea con la cámara y suma los productos a la venta
+  de la tablet. Se eligen en Ajustes o manteniendo apretado el ícono de la app instalada.
 - **Offline:** todo se guarda primero en el dispositivo y se sube al servidor cuando hay conexión.
 
 ## Pendiente
 
-- **Fase 5:** pantalla del cliente en otro dispositivo, en tiempo real (WebSocket).
 - **Fase 6:** probar el ticket con la impresora que compre el kiosco (acentos, ancho, corte).
 - Más adelante: empleados y turnos, panel para un dueño con varios kioscos.
 
@@ -99,7 +98,8 @@ Para probar desde el celular: conectarlo a la misma red wifi y abrir la direcci�
 La cámara solo funciona con https. Para probar el escaneo con cámara desde el celular:
 `npm run dev:https` y aceptar la advertencia del certificado en el navegador.
 
-La pantalla para el cliente está en `/pantalla`.
+La pantalla para el cliente está en `/pantalla` y el escáner para el celu en `/escaner`. Para
+probarlos, abrir la venta (`/`) en otra pestaña o dispositivo: se conectan con ella en vivo.
 
 ### 4. Datos de muestra
 
@@ -120,7 +120,7 @@ Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se nie
 
 ## Deploy
 
-En Railway, con el `Dockerfile` de la raíz. Pasos y variables en [docs/DEPLOY.md](docs/DEPLOY.md).
+En Railway, con el `Dockerfile` de la raíz.
 Backups diarios de la base con GitHub Actions: [backup/LEEME.md](backup/LEEME.md).
 
 En desarrollo la API no pide clave. Para probar la pantalla de ingreso, agregar
@@ -144,6 +144,19 @@ En desarrollo la API no pide clave. Para probar la pantalla de ingreso, agregar
 - **Ids UUID generados en el cliente**, para poder registrar ventas sin conexión.
 - **Stock como movimientos** (`+24` compra, `-2` venta): el stock actual es la suma.
 - **Todo lleva `kiosko_id`**, preparado para varios kioscos.
+
+## En vivo
+
+La caja, la pantalla del cliente y el escáner del celu se conectan por un WebSocket (`/api/vivo`).
+El servidor arma una sala por kiosko y reparte los mensajes: la caja manda el estado de la venta
+a la pantalla y al celu, y el celu le manda a la caja los códigos que escanea. El código está en
+`backend/app/vivo.py` y `frontend/src/lib/vivo.ts`.
+
+- Necesita internet en los dispositivos. Sin conexión la caja vende igual; la pantalla y el
+  escáner avisan y se reconectan solos cuando vuelve.
+- Las salas viven en la memoria del servidor: funciona con un solo proceso de uvicorn (como
+  arranca el `Dockerfile`). Con varios haría falta repartir los mensajes entre procesos (Redis).
+- El escáner usa el lector de códigos de Chrome en Android, igual que la cámara en la venta.
 
 ## Offline
 

@@ -18,7 +18,7 @@ export function HistorialCierres() {
 
   return (
     <section className="mt-8">
-      <h2 className="font-display text-2xl font-semibold">Cierres anteriores</h2>
+      <h2 className="font-display text-2xl font-semibold tracking-tight">Cierres anteriores</h2>
       {error ? (
         <p className="mt-2 text-tenue">Se necesita conexión para ver el historial.</p>
       ) : cierres === null ? (
@@ -26,9 +26,9 @@ export function HistorialCierres() {
       ) : cierres.length === 0 ? (
         <p className="mt-2 text-tenue">Todavía no se cerró ninguna caja.</p>
       ) : (
-        <ul className="mt-3 divide-y divide-linea overflow-hidden rounded-2xl border border-linea bg-panel">
+        <ul className="mt-3 border-t border-linea">
           {cierres.map((c) => (
-            <li key={c.id} className="grid grid-cols-2 gap-x-4 gap-y-1 px-4 py-3 text-sm md:grid-cols-4 md:items-center">
+            <li key={c.id} className="grid grid-cols-2 gap-x-4 gap-y-1 border-b border-linea px-1 py-3 text-sm md:grid-cols-4 md:items-center">
               <span className="font-medium">{formatearFechaHora(c.cerrada_en!)}</span>
               <span className="text-right tabular-nums md:text-left">
                 Ventas: <strong>{formatearPesos(c.resumen.total_ventas)}</strong>

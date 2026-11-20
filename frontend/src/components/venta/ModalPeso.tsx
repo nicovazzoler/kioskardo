@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { formatearCantidad, redondearGramos } from '../../lib/cantidad'
 import { formatearPesos, parsearPesos } from '../../lib/dinero'
-import { botonPrimario, claseInput } from '../../lib/estilos'
+import { botonPrimario, claseInput, claseOpcion } from '../../lib/estilos'
 import type { Producto } from '../../lib/modelos'
 import { calcularSubtotal } from '../../lib/ventas'
 import { Campo, InputPesos } from '../Campos'
@@ -44,7 +44,7 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
     <Modal titulo={producto.nombre} alCerrar={alCerrar}>
       <form onSubmit={confirmar} className="space-y-4">
         <p className="text-sm text-tenue">{formatearPesos(producto.precio_venta)} el kilo</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="flex gap-6 border-b border-linea">
           {(['peso', 'monto'] as const).map((m) => (
             <button
               key={m}
@@ -53,7 +53,7 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
                 setModo(m)
                 setTexto('')
               }}
-              className={`rounded-xl border py-2 font-medium ${modo === m ? 'border-tinta bg-tinta text-fondo' : 'border-borde text-tenue'}`}
+              className={`h-11 ${claseOpcion(modo === m)}`}
             >
               {m === 'peso' ? 'Por peso' : 'Por monto'}
             </button>
@@ -70,9 +70,9 @@ export function ModalPeso({ producto, alConfirmar, alCerrar }: Props) {
           </Campo>
         )}
 
-        <div className="flex items-baseline justify-between rounded-xl bg-elevado px-4 py-3">
+        <div className="flex items-baseline justify-between border-y border-linea py-3">
           <span className="text-tenue">{valido ? formatearCantidad(cantidad!, 'kg') : '—'}</span>
-          <span className="text-xl font-bold tabular-nums">{subtotal ? formatearPesos(subtotal) : '—'}</span>
+          <span className="font-display text-2xl font-semibold tracking-tight tabular-nums">{subtotal ? formatearPesos(subtotal) : '—'}</span>
         </div>
 
         <button type="submit" disabled={!valido} className={`${botonPrimario} w-full py-3`}>

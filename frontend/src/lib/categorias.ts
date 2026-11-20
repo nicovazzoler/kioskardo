@@ -1,15 +1,15 @@
 import type { Categoria } from './modelos'
 
-// El color es una clase de Tailwind escrita entera: Tailwind solo genera las clases que encuentra así.
-export const CATEGORIAS: { valor: Categoria; nombre: string; color: string; borde: string }[] = [
-  { valor: 'bebidas', nombre: 'Bebidas', color: 'bg-salvia', borde: 'border-salvia' },
-  { valor: 'golosinas', nombre: 'Golosinas', color: 'bg-rosa', borde: 'border-rosa' },
-  { valor: 'snacks', nombre: 'Snacks', color: 'bg-manteca', borde: 'border-manteca' },
-  { valor: 'cigarrillos', nombre: 'Cigarrillos', color: 'bg-lavanda', borde: 'border-lavanda' },
-  { valor: 'almacen', nombre: 'Almacén', color: 'bg-damasco', borde: 'border-damasco' },
-  { valor: 'lacteos', nombre: 'Lácteos', color: 'bg-celeste', borde: 'border-celeste' },
-  { valor: 'fiambreria', nombre: 'Fiambrería', color: 'bg-durazno', borde: 'border-durazno' },
-  { valor: 'otros', nombre: 'Otros', color: 'bg-arena', borde: 'border-arena' },
+// Los colores son clases de Tailwind escritas enteras: Tailwind solo genera las clases que encuentra así.
+export const CATEGORIAS: { valor: Categoria; nombre: string; color: string; texto: string }[] = [
+  { valor: 'bebidas', nombre: 'Bebidas', color: 'bg-salvia', texto: 'text-salvia' },
+  { valor: 'golosinas', nombre: 'Golosinas', color: 'bg-rosa', texto: 'text-rosa' },
+  { valor: 'snacks', nombre: 'Snacks', color: 'bg-manteca', texto: 'text-manteca' },
+  { valor: 'cigarrillos', nombre: 'Cigarrillos', color: 'bg-lavanda', texto: 'text-lavanda' },
+  { valor: 'almacen', nombre: 'Almacén', color: 'bg-damasco', texto: 'text-damasco' },
+  { valor: 'lacteos', nombre: 'Lácteos', color: 'bg-celeste', texto: 'text-celeste' },
+  { valor: 'fiambreria', nombre: 'Fiambrería', color: 'bg-durazno', texto: 'text-durazno' },
+  { valor: 'otros', nombre: 'Otros', color: 'bg-arena', texto: 'text-arena' },
 ]
 
 export function datosCategoria(valor: Categoria | null | undefined) {

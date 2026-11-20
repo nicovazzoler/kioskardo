@@ -40,9 +40,9 @@ export function ModalMovimiento({ cajaId, tipo, alCerrar }: Props) {
         <Campo etiqueta="Motivo">
           <input value={motivo} onChange={(e) => setMotivo(e.target.value)} className={claseInput()} />
         </Campo>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-x-4">
           {SUGERENCIAS[tipo].map((sugerencia) => (
-            <button key={sugerencia} type="button" onClick={() => setMotivo(sugerencia)} className="rounded-full bg-elevado px-3 py-1.5 text-sm text-tinta-suave">
+            <button key={sugerencia} type="button" onClick={() => setMotivo(sugerencia)} className="py-1.5 text-sm text-tinta-suave underline decoration-borde underline-offset-4 hover:text-tinta">
               {sugerencia}
             </button>
           ))}

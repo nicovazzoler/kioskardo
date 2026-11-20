@@ -19,10 +19,15 @@ export default defineConfig(({ mode }) => ({
         short_name: 'Kioskardo',
         description: 'Punto de venta para kioscos',
         lang: 'es-AR',
-        theme_color: '#1c1916',
-        background_color: '#1c1916',
+        theme_color: '#0f1626',
+        background_color: '#0f1626',
         display: 'standalone',
         start_url: '/',
+        // Aparecen al mantener apretado el ícono de la app instalada (Android).
+        shortcuts: [
+          { name: 'Escáner para la caja', short_name: 'Escáner', url: '/escaner', icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }] },
+          { name: 'Pantalla del cliente', short_name: 'Pantalla', url: '/pantalla', icons: [{ src: 'pwa-192x192.png', sizes: '192x192' }] },
+        ],
         icons: [
           { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -41,7 +46,8 @@ export default defineConfig(({ mode }) => ({
     // host: true expone el server en la red local para probar desde el celular.
     host: true,
     proxy: {
-      '/api': 'http://localhost:8000',
+      // ws: el WebSocket de /api/vivo también pasa por el proxy.
+      '/api': { target: 'http://localhost:8000', ws: true },
     },
   },
 }))

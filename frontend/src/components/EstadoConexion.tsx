@@ -2,16 +2,17 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useState } from 'react'
 import { pedirApi } from '../lib/api'
 import { db } from '../lib/db'
+import { rotulo } from '../lib/estilos'
 import { descartarRechazados } from '../lib/sincronizacion'
 
 type Estado = 'verificando' | 'conectado' | 'sin-conexion'
 
 const INTERVALO_MS = 30_000
 
-const ESTILOS: Record<Estado, { punto: string; texto: string }> = {
-  verificando: { punto: 'bg-apagado', texto: 'Verificando…' },
-  conectado: { punto: 'bg-ok', texto: 'En línea' },
-  'sin-conexion': { punto: 'bg-error', texto: 'Sin conexión' },
+const ESTILOS: Record<Estado, { color: string; texto: string }> = {
+  verificando: { color: 'text-apagado', texto: 'Verificando…' },
+  conectado: { color: 'text-ok', texto: 'En línea' },
+  'sin-conexion': { color: 'text-error', texto: 'Sin conexión' },
 }
 
 // Indicador de conexión con el backend y de cambios que todavía no se subieron.
@@ -39,7 +40,7 @@ export function EstadoConexion() {
   }, [])
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-2 text-sm text-tenue">
+    <span className={`inline-flex flex-wrap items-center gap-x-3 gap-y-1 ${rotulo}`}>
       {rechazados.length > 0 && (
         <button
           onClick={() => {
@@ -48,16 +49,13 @@ export function EstadoConexion() {
               void descartarRechazados()
             }
           }}
-          className="rounded-full bg-error px-2.5 py-0.5 font-medium text-fondo"
+          className="text-error underline underline-offset-4"
         >
-          ⚠ {rechazados.length} con error
+          {rechazados.length} con error
         </button>
       )}
-      {enCola > 0 && <span className="rounded-full bg-ambar px-2.5 py-0.5 font-medium text-fondo">{enCola} sin subir</span>}
-      <span className="inline-flex items-center gap-2">
-        <span className={`h-2.5 w-2.5 rounded-full ${ESTILOS[estado].punto}`} />
-        {ESTILOS[estado].texto}
-      </span>
+      {enCola > 0 && <span className="text-ambar">{enCola} sin subir</span>}
+      <span className={ESTILOS[estado].color}>{ESTILOS[estado].texto}</span>
     </span>
   )
 }

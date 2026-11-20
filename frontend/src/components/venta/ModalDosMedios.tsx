@@ -36,7 +36,7 @@ export function ModalDosMedios({ total, alConfirmar, alCerrar }: Props) {
       <form onSubmit={confirmar} className="space-y-5">
         <div className="flex items-baseline justify-between">
           <span className="text-tenue">Total</span>
-          <span className="font-display text-4xl font-semibold tabular-nums">{formatearPesosCorto(total)}</span>
+          <span className="font-display text-4xl font-semibold tracking-tight tabular-nums">{formatearPesosCorto(total)}</span>
         </div>
         <fieldset className="space-y-2">
           <legend className="mb-1.5 text-sm text-tenue">Primer pago</legend>
@@ -46,7 +46,7 @@ export function ModalDosMedios({ total, alConfirmar, alCerrar }: Props) {
         <fieldset className="space-y-2">
           <legend className="mb-1.5 text-sm text-tenue">Segundo pago (el resto)</legend>
           <SelectorMedio valor={segundoMedio} alCambiar={setSegundoMedio} deshabilitado={primerMedio} />
-          <p className="rounded-xl bg-elevado px-4 py-3 text-right font-display text-2xl font-semibold tabular-nums">
+          <p className="border-b border-linea py-2 text-right font-display text-2xl font-semibold tracking-tight tabular-nums">
             {resto !== null && resto > 0 ? formatearPesosCorto(resto) : '—'}
           </p>
         </fieldset>
@@ -60,14 +60,14 @@ export function ModalDosMedios({ total, alConfirmar, alCerrar }: Props) {
 
 function SelectorMedio({ valor, alCambiar, deshabilitado }: { valor: MedioPago; alCambiar: (m: MedioPago) => void; deshabilitado: MedioPago }) {
   return (
-    <div className="grid grid-cols-5 gap-1 rounded-xl bg-fondo p-1">
+    <div className="flex justify-between border-b border-linea">
       {MEDIOS_PAGO.map((m) => (
         <button
           key={m.valor}
           type="button"
           disabled={m.valor === deshabilitado}
           onClick={() => alCambiar(m.valor)}
-          className={`rounded-lg py-2 text-xs font-semibold disabled:opacity-30 ${claseOpcion(valor === m.valor)}`}
+          className={`h-10 text-[13px] disabled:opacity-30 ${claseOpcion(valor === m.valor)}`}
         >
           {m.corto}
         </button>

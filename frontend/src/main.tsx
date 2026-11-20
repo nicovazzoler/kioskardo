@@ -3,9 +3,11 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import './index.css'
 import { AppLayout } from './layouts/AppLayout'
+import { SinMenuLayout } from './layouts/SinMenuLayout'
 import { AjustesPage } from './pages/AjustesPage'
 import { iniciarSincronizacion } from './lib/sincronizacion'
 import { CajaPage } from './pages/CajaPage'
+import { EscanerPage } from './pages/EscanerPage'
 import { InventarioPage } from './pages/InventarioPage'
 import { PantallaClientePage } from './pages/PantallaClientePage'
 import { VentaPage } from './pages/VentaPage'
@@ -20,8 +22,14 @@ const router = createBrowserRouter([
       { path: '/ajustes', element: <AjustesPage /> },
     ],
   },
-  // Fuera del layout: la pantalla del cliente no lleva menú.
-  { path: '/pantalla', element: <PantallaClientePage /> },
+  // Van en otro dispositivo, a pantalla completa: sin menú.
+  {
+    element: <SinMenuLayout />,
+    children: [
+      { path: '/pantalla', element: <PantallaClientePage /> },
+      { path: '/escaner', element: <EscanerPage /> },
+    ],
+  },
 ])
 
 iniciarSincronizacion()

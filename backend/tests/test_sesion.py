@@ -1,16 +1,8 @@
 import base64
 import json
 
-import pytest
-
 from app import sesion
 from app.config import config
-
-
-@pytest.fixture
-def con_clave(monkeypatch):
-    monkeypatch.setattr(config, "clave_acceso", "kiosco123")
-    monkeypatch.setattr(sesion.time, "sleep", lambda _: None)
 
 
 def test_sin_clave_configurada_la_api_queda_abierta(cliente):

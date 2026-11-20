@@ -1,8 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { EscanerCamara } from '../components/EscanerCamara'
 import { IconoBuscar, IconoCamara, IconoRecibo } from '../components/Iconos'
-import { ICONOS_CATEGORIA } from '../components/iconosPorTipo'
 import { FormularioProducto } from '../components/inventario/FormularioProducto'
 import { ModalTicket } from '../components/ticket/ModalTicket'
 import { AbrirCaja } from '../components/venta/AbrirCaja'
@@ -14,18 +13,21 @@ import { PanelVenta } from '../components/venta/PanelVenta'
 import { Modal } from '../components/Modal'
 import { useCarrito, type ItemCarrito } from '../hooks/useCarrito'
 import { useEscaner } from '../hooks/useEscaner'
+import { useVivo } from '../hooks/useVivo'
 import { useCajaAbierta } from '../lib/cajas'
 import { camaraDisponible } from '../lib/camara'
 import { formatearCantidad } from '../lib/cantidad'
 import { CATEGORIAS, datosCategoria } from '../lib/categorias'
 import { db } from '../lib/db'
 import { formatearPesosCorto } from '../lib/dinero'
-import { botonPrimario, botonSecundario } from '../lib/estilos'
+import { botonPrimario, botonSecundario, rotulo } from '../lib/estilos'
+import { describirLinea } from '../lib/lineaVenta'
 import type { Categoria, MedioPago, Producto, Venta, VentaPago } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
 import { nuevoId } from '../lib/uuid'
 import { registrarVenta } from '../lib/ventas'
+import type { VentaEnVivo } from '../lib/vivo'
 
 type ModalAbierto =
   | { tipo: 'peso'; producto: Producto }
@@ -62,7 +64,12 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   const [medio, setMedio] = useState<MedioPago>('efectivo')
   // Se guarda junto al total para el que se eligió: si después cambia la venta, deja de valer solo.
   const [pagaCon, setPagaCon] = useState<{ total: number; monto: number } | null>(null)
+  const [codigosDelCelu, setCodigosDelCelu] = useState<string[]>([])
+  const procesandoDelCelu = useRef(false)
   const inputBusqueda = useRef<HTMLInputElement>(null)
+  const { enviar: enviarEnVivo } = useVivo('caja', (mensaje) => {
+    if (mensaje.tipo === 'codigo') setCodigosDelCelu((cola) => [...cola, mensaje.codigo])
+  })
 
   const recibido = pagaCon?.total === carrito.total ? pagaCon.monto : null
   const hayItems = carrito.items.length > 0
@@ -84,6 +91,11 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
     for (const p of productos ?? []) if (p.categoria) conteo.set(p.categoria, (conteo.get(p.categoria) ?? 0) + 1)
     return conteo
   }, [productos])
+
+  const opcionesCategoria = [
+    { valor: null, nombre: 'Todos', marcador: 'border border-apagado', cantidad: productos?.length ?? 0 },
+    ...CATEGORIAS.map((c) => ({ valor: c.valor, nombre: c.nombre, marcador: c.color, cantidad: cantidadPorCategoria.get(c.valor) ?? 0 })),
+  ]
 
   const productoPorId = useMemo(() => new Map((productos ?? []).map((p) => [p.id, p])), [productos])
 
@@ -119,6 +131,40 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   }
 
   useEscaner(procesarCodigo, modal === null)
+
+  // Con una ventana abierta los códigos del celu esperan: no pisan un peso a medio cargar.
+  const recibeDelCelu = modal === null || modal.tipo === 'hoja'
+
+  const procesarDelCelu = useEffectEvent((codigo: string) => procesarCodigo(codigo))
+
+  // De a uno: si el código abre una ventana (un producto por kg), los que siguen esperan a que se cierre.
+  useEffect(() => {
+    if (!recibeDelCelu || codigosDelCelu.length === 0 || procesandoDelCelu.current) return
+    procesandoDelCelu.current = true
+    void procesarDelCelu(codigosDelCelu[0]).finally(() => {
+      procesandoDelCelu.current = false
+      setCodigosDelCelu((cola) => cola.slice(1))
+    })
+  }, [recibeDelCelu, codigosDelCelu])
+
+  const ventaEnVivo = useMemo<VentaEnVivo>(
+    () => ({
+      items: carrito.items.map((item) => ({
+        id: item.id,
+        nombre: item.nombre,
+        subtotal: item.subtotal,
+        ...describirLinea(item, item.producto_id ? productoPorId.get(item.producto_id) : undefined),
+      })),
+      total: carrito.total,
+      recibido: medio === 'efectivo' ? recibido : null,
+      cobrada: ultimaVenta && { id: ultimaVenta.venta.id, total: ultimaVenta.venta.total, vuelto: ultimaVenta.vuelto },
+    }),
+    [carrito.items, carrito.total, medio, recibido, ultimaVenta, productoPorId],
+  )
+
+  useEffect(() => {
+    enviarEnVivo({ tipo: 'venta', venta: ventaEnVivo })
+  }, [ventaEnVivo, enviarEnVivo])
 
   const cobrar = async (pagos?: VentaPago[]) => {
     if (!hayItems) return
@@ -166,10 +212,10 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   return (
     <div className="flex h-full">
       <div className="flex min-w-0 flex-1 flex-col">
-        <div className="space-y-3 p-4 pb-3 md:p-6 md:pb-4">
+        <div className="space-y-2 px-4 pt-2 md:px-7 md:pt-4">
           <div className="relative">
-            <div className="flex gap-2">
-              <label className="flex h-12 min-w-0 flex-1 items-center gap-3 rounded-2xl border border-borde bg-tarjeta px-4 focus-within:border-ambar">
+            <div className="flex items-center border-b border-borde focus-within:border-ambar">
+              <label className="flex h-12 min-w-0 flex-1 items-center gap-3">
                 <span className="text-tenue">
                   <IconoBuscar />
                 </span>
@@ -184,12 +230,12 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
                   aria-label="Buscar producto"
                   className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-apagado"
                 />
-                {tienePunteroFino && <span className="hidden rounded-md border border-borde px-2 py-0.5 text-xs text-tenue lg:inline">Enter = cobrar</span>}
+                {tienePunteroFino && <span className="hidden text-xs text-apagado lg:inline">Enter = cobrar</span>}
               </label>
               {camaraDisponible && (
                 <button
                   onClick={() => setModal({ tipo: 'camara' })}
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-ambar text-fondo md:border md:border-borde md:bg-tarjeta md:text-tinta"
+                  className="-mr-2 flex h-12 w-12 items-center justify-center text-ambar hover:text-tinta"
                   aria-label="Escanear con la cámara"
                 >
                   <IconoCamara tamano={22} />
@@ -197,7 +243,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
               )}
             </div>
             {resultados.length > 0 && (
-              <ul className="absolute inset-x-0 top-full z-10 mt-2 overflow-hidden rounded-2xl border border-borde bg-elevado shadow-2xl">
+              <ul className="absolute inset-x-0 top-full z-10 mt-1 overflow-hidden rounded-md border border-borde bg-elevado shadow-2xl">
                 {resultados.map((producto, indice) => (
                   <li key={producto.id}>
                     <button
@@ -205,7 +251,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
                       className={`flex w-full justify-between gap-3 px-4 py-3 text-left hover:bg-borde ${indice === 0 ? 'bg-borde/60' : ''}`}
                     >
                       <span className="truncate">{producto.nombre}</span>
-                      <span className="shrink-0 font-semibold tabular-nums">{etiquetaPrecio(producto)}</span>
+                      <span className="shrink-0 font-display font-semibold tabular-nums">{etiquetaPrecio(producto)}</span>
                     </button>
                   </li>
                 ))}
@@ -214,118 +260,114 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
           </div>
 
           {codigoDesconocido && (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-error/40 bg-error/10 px-4 py-3">
-              <span>
+            <div className="flex items-center justify-between gap-3 border-b border-error/50 py-2">
+              <span className="text-error">
                 No existe el código <strong className="font-mono">{codigoDesconocido}</strong>
               </span>
-              <button onClick={() => setModal({ tipo: 'crear', codigo: codigoDesconocido })} className={`${botonPrimario} shrink-0 px-3 py-1.5 text-sm`}>
+              <button onClick={() => setModal({ tipo: 'crear', codigo: codigoDesconocido })} className={`${botonPrimario} shrink-0 px-3 py-2 text-sm`}>
                 Crear producto
               </button>
             </div>
           )}
 
-          <div className="hidden grid-cols-[repeat(auto-fill,minmax(132px,1fr))] gap-3 md:grid">
-            {CATEGORIAS.map((c) => {
-              const Icono = ICONOS_CATEGORIA[c.valor]
-              const elegida = categoria === c.valor
+          <div className="-mx-4 flex gap-5 overflow-x-auto border-b border-linea px-4 [scrollbar-width:none] md:hidden">
+            {opcionesCategoria.map((opcion) => {
+              const elegida = categoria === opcion.valor
               return (
                 <button
-                  key={c.valor}
-                  onClick={() => setCategoria(elegida ? null : c.valor)}
+                  key={opcion.nombre}
+                  onClick={() => setCategoria(opcion.valor)}
                   aria-pressed={elegida}
-                  className={`flex h-[92px] flex-col items-start justify-between rounded-2xl p-3 text-left text-fondo ${c.color} ${
-                    elegida ? 'outline-2 outline-offset-3 outline-tinta' : ''
-                  }`}
+                  className={`flex h-11 shrink-0 items-center gap-2 text-sm ${elegida ? 'font-bold text-tinta' : 'text-tinta-suave'}`}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-fondo/10">
-                    <Icono tamano={18} />
-                  </span>
-                  <span>
-                    <span className="block font-bold">{c.nombre}</span>
-                    <span className="block text-xs text-fondo/75">{cantidadPorCategoria.get(c.valor) ?? 0} productos</span>
-                  </span>
+                  <span className={`h-2.5 w-2.5 rounded-[2px] ${opcion.marcador}`} />
+                  {opcion.nombre}
+                  {elegida && <span className="text-xs text-ambar tabular-nums">{opcion.cantidad}</span>}
                 </button>
               )
             })}
           </div>
-
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:hidden">
-            <button
-              onClick={() => setCategoria(null)}
-              aria-pressed={categoria === null}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold ${categoria === null ? 'bg-tinta text-fondo' : 'border border-borde text-tinta-suave'}`}
-            >
-              Todos
-            </button>
-            {CATEGORIAS.map((c) => (
-              <button
-                key={c.valor}
-                onClick={() => setCategoria(categoria === c.valor ? null : c.valor)}
-                aria-pressed={categoria === c.valor}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold text-fondo ${c.color} ${
-                  categoria === c.valor ? 'outline-2 outline-offset-2 outline-tinta' : ''
-                }`}
-              >
-                {c.nombre}
-              </button>
-            ))}
-          </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 md:px-6 md:pb-6">
-          <div className="mb-3 flex items-baseline gap-3">
-            <h2 className="font-display text-xl font-semibold">{datosCategoria(categoria)?.nombre ?? 'Todos los productos'}</h2>
-            <span className="text-sm text-tenue">{visibles.length} productos</span>
-            {categoria && (
-              <button onClick={() => setCategoria(null)} className="ml-auto text-sm text-tinta-suave underline">
-                Ver todos
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] md:gap-3">
-            {visibles.map((producto) => (
-              <TarjetaProducto
-                key={producto.id}
-                producto={producto}
-                linea={lineaPorProducto.get(producto.id)}
-                alAgregar={() => agregar(producto)}
-                alCambiarCantidad={carrito.cambiarCantidad}
-              />
-            ))}
-          </div>
+        <div className="flex min-h-0 flex-1 gap-7 px-4 md:px-7">
+          <nav aria-label="Categorías" className="hidden w-44 shrink-0 overflow-y-auto pb-4 md:block">
+            <p className={`${rotulo} py-3 text-apagado`}>Categorías</p>
+            <ul className="border-b border-linea">
+              {opcionesCategoria.map((opcion) => {
+                const elegida = categoria === opcion.valor
+                return (
+                  <li key={opcion.nombre} className="border-t border-linea">
+                    <button
+                      onClick={() => setCategoria(opcion.valor)}
+                      aria-pressed={elegida}
+                      className={`flex h-11 w-full items-center gap-2.5 text-left text-sm ${elegida ? 'font-bold text-tinta' : 'text-tinta-suave hover:text-tinta'}`}
+                    >
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${opcion.marcador}`} />
+                      <span className="flex-1">{opcion.nombre}</span>
+                      <span className={`text-xs tabular-nums ${elegida ? 'text-ambar' : 'text-apagado'}`}>{opcion.cantidad}</span>
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
+
+          <section className="min-h-0 min-w-0 flex-1 overflow-y-auto pb-4">
+            <div className="flex items-baseline gap-3 pt-3 pb-2">
+              <h2 className="font-display text-xl font-semibold tracking-tight md:text-2xl">{datosCategoria(categoria)?.nombre ?? 'Todos los productos'}</h2>
+              <span className="text-sm text-tenue">{visibles.length} productos</span>
+            </div>
+            <ul className="grid border-t border-linea xl:grid-cols-2 xl:gap-x-8">
+              {visibles.map((producto) => (
+                <FilaProducto
+                  key={producto.id}
+                  producto={producto}
+                  linea={lineaPorProducto.get(producto.id)}
+                  alAgregar={() => agregar(producto)}
+                  alCambiarCantidad={carrito.cambiarCantidad}
+                />
+              ))}
+            </ul>
+          </section>
         </div>
 
-        <div className="border-t border-linea p-3 lg:hidden">
+        <div className="border-t border-linea bg-panel px-4 py-3 lg:hidden">
           {hayItems ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-borde bg-elevado p-2 pl-4">
-              <button onClick={() => setModal({ tipo: 'hoja' })} className="flex flex-1 flex-col text-left">
-                <span className="text-xs text-tenue">{carrito.items.length} en la venta · Ver venta</span>
-                <span className="font-display text-2xl font-semibold tabular-nums">{formatearPesosCorto(carrito.total)}</span>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setModal({ tipo: 'hoja' })} className="flex min-w-0 flex-1 flex-col text-left">
+                <span className="text-xs text-tenue">
+                  {carrito.items.length} en la venta · <span className="underline">Ver venta</span>
+                </span>
+                <span className="font-display text-2xl font-semibold tracking-tight tabular-nums">{formatearPesosCorto(carrito.total)}</span>
               </button>
               <button onClick={() => setModal({ tipo: 'hoja' })} className={`${botonPrimario} h-12 px-6`}>
                 Cobrar
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3 px-1">
+            <div className="flex items-center gap-2">
               {ultimaVenta ? (
                 <>
                   <span className="flex-1 text-sm">
-                    ✓ Venta de {formatearPesosCorto(ultimaVenta.venta.total)}
+                    Venta de {formatearPesosCorto(ultimaVenta.venta.total)}
                     {ultimaVenta.vuelto > 0 && (
                       <>
                         {' · '}Vuelto <strong className="text-salvia">{formatearPesosCorto(ultimaVenta.vuelto)}</strong>
                       </>
                     )}
                   </span>
-                  <button onClick={() => setModal({ tipo: 'ticket', venta: ultimaVenta.venta })} className={`${botonSecundario} flex h-10 w-10 items-center justify-center`} aria-label="Ver ticket">
+                  <button
+                    onClick={() => setModal({ tipo: 'ticket', venta: ultimaVenta.venta })}
+                    className={`${botonSecundario} flex h-11 w-11 items-center justify-center`}
+                    aria-label="Ver ticket"
+                  >
                     <IconoRecibo tamano={18} />
                   </button>
                 </>
               ) : (
                 <span className="flex-1 text-sm text-tenue">Sin productos en la venta</span>
               )}
-              <button onClick={() => setModal({ tipo: 'varios' })} className={`${botonSecundario} h-10 px-3 text-sm`}>
+              <button onClick={() => setModal({ tipo: 'varios' })} className={`${botonSecundario} h-11 px-3 text-sm`}>
                 Varios $
               </button>
             </div>
@@ -333,7 +375,7 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
         </div>
       </div>
 
-      <aside className="hidden w-[340px] shrink-0 border-l border-linea bg-panel p-6 lg:block">{panel(false)}</aside>
+      <aside className="hidden w-[324px] shrink-0 border-l border-linea p-6 lg:block">{panel(false)}</aside>
 
       {modal?.tipo === 'hoja' && (
         <Modal titulo="Venta actual" alCerrar={cerrarModal}>
@@ -395,46 +437,43 @@ function PuntoDeVenta({ cajaId }: { cajaId: string }) {
   )
 }
 
-interface TarjetaProps {
+interface FilaProps {
   producto: Producto
   linea: ItemCarrito | undefined
   alAgregar: () => void
   alCambiarCantidad: (id: string, cantidad: number) => void
 }
 
-function TarjetaProducto({ producto, linea, alAgregar, alCambiarCantidad }: TarjetaProps) {
-  const categoria = datosCategoria(producto.categoria)
+function FilaProducto({ producto, linea, alAgregar, alCambiarCantidad }: FilaProps) {
   const stock = etiquetaStock(producto)
 
   return (
-    <div className={`flex min-h-32 flex-col rounded-2xl border-[1.5px] bg-tarjeta p-3 ${linea ? (categoria?.borde ?? 'border-arena') : 'border-linea'}`}>
-      <button onClick={alAgregar} className="flex flex-1 flex-col items-start gap-1 text-left">
+    <li className="flex min-h-14 items-center gap-2 border-b border-linea">
+      <button onClick={alAgregar} className="flex min-w-0 flex-1 flex-col gap-0.5 py-2 text-left">
+        <span className="leading-snug font-semibold">{producto.nombre}</span>
         <span className={`text-xs ${stock.alerta ? 'font-semibold text-ambar' : 'text-tenue'}`}>{stock.texto}</span>
-        <span className="line-clamp-2 text-[15px] leading-snug font-semibold">{producto.nombre}</span>
       </button>
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <span className="font-display text-lg font-semibold tabular-nums">{etiquetaPrecio(producto)}</span>
-        {linea ? (
-          <div className="flex items-center rounded-xl bg-fondo p-0.5">
-            <button onClick={() => alCambiarCantidad(linea.id, linea.cantidad - 1)} aria-label="Uno menos" className="h-8 w-8 rounded-lg text-lg">
-              −
-            </button>
-            <span className="w-6 text-center font-bold tabular-nums">{linea.cantidad}</span>
-            <button
-              onClick={() => alCambiarCantidad(linea.id, linea.cantidad + 1)}
-              aria-label="Uno más"
-              className={`h-8 w-8 rounded-lg text-lg text-fondo ${categoria?.color ?? 'bg-arena'}`}
-            >
-              +
-            </button>
-          </div>
-        ) : (
-          <button onClick={alAgregar} aria-label={`Agregar ${producto.nombre}`} className="h-9 w-9 shrink-0 rounded-xl bg-elevado text-xl hover:bg-borde">
+      <span className={`shrink-0 whitespace-nowrap ${producto.precio_libre ? 'text-sm text-tenue' : 'font-display font-semibold tabular-nums'}`}>
+        {etiquetaPrecio(producto)}
+      </span>
+      {linea ? (
+        <div className="flex w-24 shrink-0 items-center justify-end">
+          <button onClick={() => alCambiarCantidad(linea.id, linea.cantidad - 1)} aria-label="Uno menos" className="h-11 w-9 text-xl text-tinta-suave hover:text-tinta">
+            −
+          </button>
+          <span className="min-w-6 text-center font-bold text-ambar tabular-nums">{linea.cantidad}</span>
+          <button onClick={() => alCambiarCantidad(linea.id, linea.cantidad + 1)} aria-label="Uno más" className="h-11 w-9 text-xl text-ambar hover:text-tinta">
             +
           </button>
-        )}
-      </div>
-    </div>
+        </div>
+      ) : (
+        <div className="flex w-24 shrink-0 justify-end">
+          <button onClick={alAgregar} aria-label={`Agregar ${producto.nombre}`} className="h-11 w-11 text-2xl text-ambar hover:text-tinta">
+            +
+          </button>
+        </div>
+      )}
+    </li>
   )
 }
 

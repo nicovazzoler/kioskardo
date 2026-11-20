@@ -13,7 +13,7 @@ import { db } from '../lib/db'
 import { formatearFechaHora } from '../lib/fechas'
 import type { Caja, ResumenCaja, TipoMovimientoCaja } from '../lib/modelos'
 import { calcularResumen } from '../lib/resumenCaja'
-import { botonPrimario, botonSecundario } from '../lib/estilos'
+import { botonPrimario, botonSecundario, claseOpcion } from '../lib/estilos'
 
 export function CajaPage() {
   const caja = useCajaAbierta()
@@ -58,17 +58,17 @@ function CajaAbierta({ caja, alCerrar }: Props) {
     <section className="mx-auto max-w-5xl p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl font-semibold">Caja</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Caja</h1>
           <p className="text-sm text-tenue">Abierta desde {formatearFechaHora(caja.abierta_en)}</p>
         </div>
-        <div className="flex w-full gap-2 text-sm md:w-auto">
-          <button onClick={() => setModal('ingreso')} className={`${botonSecundario} h-11 flex-1 px-4 md:flex-none`}>
+        <div className="flex w-full gap-1 text-sm md:w-auto">
+          <button onClick={() => setModal('ingreso')} className={`${botonSecundario} h-11 flex-1 px-3 md:flex-none`}>
             + Ingreso
           </button>
-          <button onClick={() => setModal('egreso')} className={`${botonSecundario} h-11 flex-1 px-4 md:flex-none`}>
+          <button onClick={() => setModal('egreso')} className={`${botonSecundario} h-11 flex-1 px-3 md:flex-none`}>
             − Egreso
           </button>
-          <button onClick={() => setModal('cierre')} className={`${botonPrimario} h-11 flex-1 rounded-xl px-5 whitespace-nowrap md:flex-none`}>
+          <button onClick={() => setModal('cierre')} className={`${botonPrimario} ml-1 h-11 flex-1 px-5 whitespace-nowrap md:flex-none`}>
             Cerrar caja
           </button>
         </div>
@@ -78,19 +78,14 @@ function CajaAbierta({ caja, alCerrar }: Props) {
         <DetalleResumen montoInicial={caja.monto_inicial} resumen={resumen} />
       </div>
 
-      <div className="mt-6 flex gap-2">
+      <div className="mt-6 flex gap-6 border-b border-linea">
         {(['ventas', 'movimientos'] as const).map((p) => (
-          <button
-            key={p}
-            onClick={() => setPestania(p)}
-            aria-pressed={pestania === p}
-            className={`rounded-full px-4 py-2 text-sm font-semibold ${pestania === p ? 'bg-tinta text-fondo' : 'border border-borde text-tinta-suave hover:bg-elevado'}`}
-          >
-            {p === 'ventas' ? `Ventas ${ventas.length}` : `Ingresos y egresos ${movimientos.length}`}
+          <button key={p} onClick={() => setPestania(p)} aria-pressed={pestania === p} className={`h-11 text-sm ${claseOpcion(pestania === p)}`}>
+            {p === 'ventas' ? 'Ventas' : 'Ingresos y egresos'} <span className="font-normal text-tenue tabular-nums">{p === 'ventas' ? ventas.length : movimientos.length}</span>
           </button>
         ))}
       </div>
-      <div className="mt-3">{pestania === 'ventas' ? <ListaVentas ventas={ventas} /> : <ListaMovimientos movimientos={movimientos} />}</div>
+      <div>{pestania === 'ventas' ? <ListaVentas ventas={ventas} /> : <ListaMovimientos movimientos={movimientos} />}</div>
 
       {(modal === 'ingreso' || modal === 'egreso') && <ModalMovimiento cajaId={caja.id} tipo={modal} alCerrar={() => setModal(null)} />}
       {modal === 'cierre' && <ModalCierre esperado={resumen.efectivo_esperado} alCerrar={() => setModal(null)} alConfirmar={cerrar} />}

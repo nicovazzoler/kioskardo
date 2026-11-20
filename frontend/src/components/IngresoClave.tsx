@@ -27,11 +27,11 @@ export function IngresoClave() {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-fondo p-4">
-      <form onSubmit={ingresar} className="w-full max-w-sm space-y-4 rounded-3xl border border-borde bg-panel p-6 shadow-2xl">
+      <form onSubmit={ingresar} className="w-full max-w-sm space-y-5">
         <div className="flex items-center gap-3">
           <img src="/logo.svg" alt="" className="h-10 w-10" />
           <div>
-            <h1 className="font-display text-2xl font-semibold">Kioskardo</h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight">Kioskardo</h1>
             <p className="text-sm text-tenue">Ingresá la clave del kiosco</p>
           </div>
         </div>

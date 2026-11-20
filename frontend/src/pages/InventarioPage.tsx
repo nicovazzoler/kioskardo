@@ -10,7 +10,7 @@ import { formatearCantidad } from '../lib/cantidad'
 import { CATEGORIAS, datosCategoria } from '../lib/categorias'
 import { db } from '../lib/db'
 import { formatearPesosCorto } from '../lib/dinero'
-import { botonPrimario, botonSecundario } from '../lib/estilos'
+import { botonPrimario, botonSecundario, claseOpcion, rotulo } from '../lib/estilos'
 import type { Categoria, Producto } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
@@ -83,16 +83,16 @@ export function InventarioPage() {
       <section className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-3xl font-semibold">Inventario</h1>
+            <h1 className="font-display text-3xl font-semibold tracking-tight">Inventario</h1>
             {productos && (
               <p className="text-sm text-tenue">
                 {cuantos(FILTROS[0])} productos{conStockBajo > 0 && ` · ${conStockBajo} con stock bajo`}
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1">
             {camaraDisponible && (
-              <button onClick={() => setCamara(true)} className={`${botonSecundario} flex h-11 items-center gap-2 px-4 text-sm`}>
+              <button onClick={() => setCamara(true)} className={`${botonSecundario} flex h-11 items-center gap-2 px-3 text-sm`}>
                 <IconoCamara tamano={18} />
                 Escanear
               </button>
@@ -103,7 +103,7 @@ export function InventarioPage() {
           </div>
         </div>
 
-        <label className="mt-4 flex h-12 items-center gap-3 rounded-2xl border border-borde bg-tarjeta px-4 focus-within:border-ambar">
+        <label className="mt-3 flex h-12 items-center gap-3 border-b border-borde focus-within:border-ambar">
           <span className="text-tenue">
             <IconoBuscar />
           </span>
@@ -119,34 +119,32 @@ export function InventarioPage() {
         </label>
 
         {!termino && (
-          <div className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
-            {FILTROS.map((f) => (
-              <button
-                key={f.valor}
-                onClick={() => setFiltro(f.valor)}
-                aria-pressed={filtro === f.valor}
-                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
-                  filtro === f.valor ? 'bg-tinta text-fondo' : 'border border-borde text-tinta-suave hover:bg-elevado'
-                }`}
-              >
-                {f.valor === 'stock-bajo' && <span className="h-2 w-2 rounded-full bg-ambar" />}
-                {f.nombre} {f.valor !== 'todos' && <span className="tabular-nums opacity-70">{cuantos(f)}</span>}
-              </button>
-            ))}
-            <span className="mx-1 hidden h-5 w-px bg-borde sm:block" />
-            {CATEGORIAS.map((c) => (
-              <button
-                key={c.valor}
-                onClick={() => setCategoria(categoria === c.valor ? null : c.valor)}
-                aria-pressed={categoria === c.valor}
-                className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-fondo ${c.color} ${
-                  categoria === c.valor ? 'outline-2 outline-offset-2 outline-tinta' : categoria ? 'opacity-50' : ''
-                }`}
-              >
-                {c.nombre}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="-mx-4 mt-1 flex gap-6 overflow-x-auto border-b border-linea px-4 [scrollbar-width:none] md:mx-0 md:px-0">
+              {FILTROS.map((f) => (
+                <button key={f.valor} onClick={() => setFiltro(f.valor)} aria-pressed={filtro === f.valor} className={`h-11 shrink-0 text-sm ${claseOpcion(filtro === f.valor)}`}>
+                  {f.nombre}{' '}
+                  <span className={`tabular-nums ${f.valor === 'stock-bajo' && cuantos(f) > 0 ? 'text-ambar' : 'font-normal text-tenue'}`}>{cuantos(f)}</span>
+                </button>
+              ))}
+            </div>
+            <div className="-mx-4 mt-1 flex gap-x-5 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
+              {CATEGORIAS.map((c) => {
+                const elegida = categoria === c.valor
+                return (
+                  <button
+                    key={c.valor}
+                    onClick={() => setCategoria(elegida ? null : c.valor)}
+                    aria-pressed={elegida}
+                    className={`flex h-10 shrink-0 items-center gap-2 text-sm ${elegida ? 'font-bold text-tinta' : categoria ? 'text-apagado' : 'text-tinta-suave hover:text-tinta'}`}
+                  >
+                    <span className={`h-2.5 w-2.5 rounded-[2px] ${c.color}`} />
+                    {c.nombre}
+                  </button>
+                )
+              })}
+            </div>
+          </>
         )}
 
         {productos === undefined ? null : visibles.length === 0 ? (
@@ -156,15 +154,14 @@ export function InventarioPage() {
             alCrear={() => setFormulario({ modo: 'nuevo', codigo: pareceCodigoDeBarras(busqueda) ? busqueda.trim() : undefined })}
           />
         ) : (
-          <div className="mt-4 overflow-hidden rounded-2xl border border-linea bg-panel">
-            <div className="hidden grid-cols-[minmax(0,1fr)_110px_80px_100px_60px] gap-3 border-b border-linea px-4 py-2.5 text-xs text-tenue md:grid">
+          <div className="mt-2">
+            <div className={`hidden grid-cols-[minmax(0,1fr)_80px_100px_64px] gap-3 border-b border-linea px-2 py-2.5 text-apagado md:grid ${rotulo}`}>
               <span>Producto</span>
-              <span>Categoría</span>
               <span className="text-right">Stock</span>
               <span className="text-right">Precio</span>
               <span className="text-right">Margen</span>
             </div>
-            <ul className="divide-y divide-linea">
+            <ul>
               {visibles.map((producto) => (
                 <FilaProducto
                   key={producto.id}
@@ -179,10 +176,10 @@ export function InventarioPage() {
       </section>
 
       {conPanel && (
-        <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-linea bg-panel p-6">
+        <aside className="w-[360px] shrink-0 overflow-y-auto bg-panel p-6">
           {formularioAbierto ?? (
             <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-tenue">
-              <p className="font-display text-xl text-tinta-suave">Elegí un producto</p>
+              <p className="font-display text-xl tracking-tight text-tinta-suave">Elegí un producto</p>
               <p className="text-sm">Tocalo en la lista o escaneá su código para editarlo y cargar stock.</p>
             </div>
           )}
@@ -209,35 +206,25 @@ function FilaProducto({ producto, elegido, alElegir }: { producto: Producto; ele
   const margen = producto.costo && !producto.precio_libre ? Math.round(((producto.precio_venta - producto.costo) / producto.costo) * 100) : null
 
   return (
-    <li>
+    <li className="border-b border-linea">
       <button
         onClick={alElegir}
         aria-current={elegido}
-        className={`grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-4 py-2.5 text-left md:grid-cols-[minmax(0,1fr)_110px_80px_100px_60px] ${
-          elegido ? 'bg-elevado shadow-[inset_0_0_0_1.5px_var(--color-ambar)]' : 'hover:bg-tarjeta'
+        className={`grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-2 py-2.5 text-left md:grid-cols-[minmax(0,1fr)_80px_100px_64px] ${
+          elegido ? 'bg-panel' : 'hover:bg-panel/60'
         } ${producto.activo ? '' : 'opacity-50'}`}
       >
-        <span className="min-w-0">
-          <span className="block truncate font-semibold">{producto.nombre}</span>
-          <span className="block truncate font-mono text-[11px] text-apagado">{producto.codigo_barras ?? 'sin código'}</span>
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${categoria ? categoria.color : 'border border-apagado'}`} title={categoria?.nombre ?? 'Sin categoría'} />
+          <span className="min-w-0">
+            <span className={`block truncate font-semibold ${elegido ? 'text-ambar' : ''}`}>{producto.nombre}</span>
+            <span className="block truncate font-mono text-[11px] text-apagado">{producto.codigo_barras ?? 'sin código'}</span>
+          </span>
         </span>
-        <span className="hidden md:block">
-          {categoria ? (
-            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-fondo ${categoria.color}`}>{categoria.nombre}</span>
-          ) : (
-            <span className="text-xs text-apagado">—</span>
-          )}
+        <span className={`justify-self-end text-sm tabular-nums ${bajo ? 'font-bold text-ambar' : ''}`}>
+          {producto.precio_libre ? <span className="text-apagado">—</span> : formatearCantidad(producto.stock, producto.unidad)}
         </span>
-        <span className="justify-self-end text-sm tabular-nums">
-          {producto.precio_libre ? (
-            <span className="text-apagado">—</span>
-          ) : bajo ? (
-            <span className="rounded-full bg-ambar px-2.5 py-0.5 font-bold text-fondo">{formatearCantidad(producto.stock, producto.unidad)}</span>
-          ) : (
-            formatearCantidad(producto.stock, producto.unidad)
-          )}
-        </span>
-        <span className="text-right font-semibold tabular-nums">
+        <span className="text-right font-display font-semibold tabular-nums">
           {producto.precio_libre ? (
             <span className="text-sm font-normal text-tenue">Precio libre</span>
           ) : (
@@ -255,7 +242,7 @@ function FilaProducto({ producto, elegido, alElegir }: { producto: Producto; ele
 
 function ListaVacia({ hayProductos, busqueda, alCrear }: { hayProductos: boolean; busqueda: string; alCrear: () => void }) {
   return (
-    <div className="mt-4 rounded-2xl border border-dashed border-borde p-8 text-center text-tenue">
+    <div className="mt-4 border-b border-linea py-10 text-center text-tenue">
       {hayProductos ? (
         <>
           <p>No hay productos que coincidan.</p>

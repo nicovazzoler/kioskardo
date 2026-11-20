@@ -1,3 +1,4 @@
+import { botonPrimario } from '../../lib/estilos'
 import { leerColumnas, imprimir } from '../../lib/impresora'
 import { useKiosko } from '../../lib/kiosko'
 import type { KioskoGuardar, Venta } from '../../lib/modelos'
@@ -14,11 +15,11 @@ export function ModalTicket({ venta, alCerrar }: { venta: Venta; alCerrar: () =>
 
   return (
     <Modal titulo="Ticket" alCerrar={alCerrar}>
-      <div className="overflow-x-auto rounded-2xl bg-elevado py-5">
+      <div className="overflow-x-auto rounded-sm bg-elevado py-5">
         <VistaTicket lineas={lineas} columnas={columnas} />
       </div>
-      <button autoFocus onClick={() => imprimir(lineas)} className="mt-4 w-full rounded-xl bg-tinta py-3 text-lg font-semibold text-fondo hover:bg-white">
-        🖨️ Imprimir
+      <button autoFocus onClick={() => imprimir(lineas)} className={`${botonPrimario} mt-4 w-full py-3 text-lg`}>
+        Imprimir
       </button>
       <p className="mt-2 text-center text-xs text-tenue">Se imprime con la app RawBT. Los datos del negocio y el papel se cambian en Ajustes.</p>
     </Modal>

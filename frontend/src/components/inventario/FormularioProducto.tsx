@@ -10,7 +10,7 @@ import { nuevoId } from '../../lib/uuid'
 import { camaraDisponible } from '../../lib/camara'
 import { botonPrimario, botonSecundario, claseInput, claseOpcion } from '../../lib/estilos'
 import { EscanerCamara } from '../EscanerCamara'
-import { IconoCamara } from '../Iconos'
+import { IconoCamara, IconoTilde } from '../Iconos'
 import { Modal } from '../Modal'
 import { Campo, InputPesos } from '../Campos'
 import { AjusteStock } from './AjusteStock'
@@ -95,9 +95,9 @@ export function FormularioProducto({ productoId, codigoInicial, alCerrar, alEdit
       <header className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs text-tenue">{titulo}</p>
-          {producto && <h2 className="font-display text-2xl leading-tight font-semibold">{producto.nombre}</h2>}
+          {producto && <h2 className="font-display text-2xl leading-tight font-semibold tracking-tight">{producto.nombre}</h2>}
         </div>
-        <button onClick={alCerrar} aria-label="Cerrar" className={`${botonSecundario} flex h-10 w-10 shrink-0 items-center justify-center text-2xl leading-none text-tenue`}>
+        <button onClick={alCerrar} aria-label="Cerrar" className={`${botonSecundario} -mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-2xl leading-none`}>
           ×
         </button>
       </header>
@@ -194,11 +194,11 @@ function Formulario({
   return (
     <form onSubmit={(e) => guardar(e, false)} className="mt-4 space-y-4" noValidate>
       {ultimoGuardado && (
-        <p className="rounded-xl bg-salvia/15 px-3 py-2 text-sm text-salvia">✓ Guardado: {ultimoGuardado}</p>
+        <p className="text-sm font-semibold text-ok">Guardado: {ultimoGuardado}</p>
       )}
 
       <Campo etiqueta="Código de barras" ayuda="Escaneá con la pistola o la cámara. Vacío si no tiene.">
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1">
           <input
             ref={inputCodigo}
             autoFocus={esAlta && !codigoInicial}
@@ -209,7 +209,7 @@ function Formulario({
             className={claseInput(hayDuplicado)}
           />
           {camaraDisponible && (
-            <button type="button" onClick={() => setCamara(true)} className={`${botonSecundario} px-3`} aria-label="Escanear con cámara">
+            <button type="button" onClick={() => setCamara(true)} className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center text-ambar hover:text-tinta" aria-label="Escanear con cámara">
               <IconoCamara />
             </button>
           )}
@@ -253,31 +253,39 @@ function Formulario({
       )}
 
       <Campo etiqueta="Categoría" grupo>
-        <div className="flex flex-wrap gap-1.5">
-          {CATEGORIAS.map((c) => (
-            <button
-              key={c.valor}
-              type="button"
-              onClick={() => cambiar('categoria', campos.categoria === c.valor ? null : c.valor)}
-              aria-pressed={campos.categoria === c.valor}
-              className={`rounded-full px-3 py-1.5 text-sm font-semibold ${
-                campos.categoria === c.valor ? `${c.color} text-fondo` : 'border border-borde text-tinta-suave hover:bg-elevado'
-              }`}
-            >
-              {c.nombre}
-            </button>
-          ))}
+        <div className="grid grid-cols-2 gap-x-4">
+          {CATEGORIAS.map((c) => {
+            const elegida = campos.categoria === c.valor
+            return (
+              <button
+                key={c.valor}
+                type="button"
+                onClick={() => cambiar('categoria', elegida ? null : c.valor)}
+                aria-pressed={elegida}
+                className={`flex h-9 items-center gap-2 text-left text-sm ${elegida ? 'font-bold text-tinta' : 'text-tinta-suave hover:text-tinta'}`}
+              >
+                <span className={`h-2.5 w-2.5 shrink-0 rounded-[2px] ${c.color}`} />
+                <span className="flex-1">{c.nombre}</span>
+                {elegida && (
+                  <span className="text-ambar">
+                    <IconoTilde tamano={16} />
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
       </Campo>
 
       <Campo etiqueta="Se vende por" grupo ayuda={precioLibre ? 'Al venderlo se tipea el monto. No lleva stock.' : undefined}>
-        <div className="grid grid-cols-3 gap-1 rounded-xl bg-fondo p-1">
+        <div className="flex gap-6 border-b border-linea">
           {OPCIONES_VENTA.map((opcion) => (
             <button
               key={opcion.valor}
               type="button"
               onClick={() => cambiar('seVendePor', opcion.valor)}
-              className={`rounded-lg py-2 text-sm font-semibold ${claseOpcion(campos.seVendePor === opcion.valor)}`}
+              aria-pressed={campos.seVendePor === opcion.valor}
+              className={`h-11 text-sm ${claseOpcion(campos.seVendePor === opcion.valor)}`}
             >
               {opcion.nombre}
             </button>
@@ -323,7 +331,7 @@ function Formulario({
             Guardar y cargar otro
           </button>
         ) : (
-          <button type="button" onClick={cambiarActivo} className={`${botonSecundario} flex-1 py-3 text-tenue`}>
+          <button type="button" onClick={cambiarActivo} className={`${botonSecundario} flex-1 py-3`}>
             {producto.activo ? 'Desactivar producto' : 'Reactivar producto'}
           </button>
         )}
