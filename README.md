@@ -11,10 +11,11 @@ Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
 
 ## Qué hace
 
-- **Venta:** escaneo con pistola lectora o con la cámara del celular, búsqueda sin importar tildes,
-  productos por peso ("$500 de caramelos"), ítems "Varios" de monto libre y cobro con hasta dos
-  medios de pago, con cálculo de vuelto. Los productos sin código aparecen como botones rápidos;
-  los de precio libre (fiambre, pan) piden el monto al venderlos.
+- **Venta:** escaneo con pistola lectora o con la cámara del celular, búsqueda en todo el catálogo
+  sin importar tildes, y los productos agrupados por categoría para tocarlos. Productos por peso
+  ("$500 de caramelos"), de precio libre (fiambre: se tipea el monto de la balanza) e ítems
+  "Varios". Se cobra con un toque eligiendo el medio de pago; el "¿con cuánto paga?" para el vuelto
+  es opcional. Hasta dos medios de pago en una venta.
 - **Inventario:** alta rápida escaneando el código, stock calculado a partir de movimientos (compra,
   merma, ajuste) y margen de ganancia por producto.
 - **Caja:** apertura con monto inicial, ingresos y egresos de efectivo, anulación de ventas, cierre

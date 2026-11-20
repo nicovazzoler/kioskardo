@@ -20,6 +20,7 @@ from app.config import config, es_base_local
 from app.db import SesionLocal
 from app.modelos import (
     Caja,
+    Categoria,
     Kiosko,
     MedioPago,
     MotivoStock,
@@ -127,6 +128,34 @@ CATALOGO = [
         unidad=Unidad.KG,
     ),
 ]
+
+CATEGORIAS = {
+    Categoria.BEBIDAS: [
+        "Gaseosa cola 500 ml",
+        "Gaseosa lima limón 500 ml",
+        "Agua mineral sin gas 500 ml",
+        "Cerveza rubia lata 473 ml",
+        "Energizante lata 310 ml",
+    ],
+    Categoria.GOLOSINAS: [
+        "Alfajor triple de chocolate",
+        "Alfajor simple de dulce de leche",
+        "Chocolate con leche 25 g",
+        "Barrita de cereal",
+        "Chicles menta pastillero",
+        "Chupetín frutal",
+        "Turrón de maní",
+        "Helado palito de agua",
+        "Caramelos surtidos",
+        "Maní con chocolate",
+    ],
+    Categoria.SNACKS: ["Papas fritas 75 g", "Palitos salados 100 g"],
+    Categoria.ALMACEN: ["Galletitas dulces 120 g", "Galletitas de agua 100 g", "Yerba mate 1 kg"],
+    Categoria.LACTEOS: ["Leche entera sachet 1 L"],
+    Categoria.CIGARRILLOS: ["Cigarrillos box 20", "Encendedor"],
+    Categoria.OTROS: ["Pilas AA por 2", "Preservativos por 3"],
+}
+CATEGORIA_DE = {nombre: cat for cat, nombres in CATEGORIAS.items() for nombre in nombres}
 
 # Ítems de monto libre: lo que el kiosco cobra y no está en el inventario.
 VARIOS = [
@@ -412,6 +441,7 @@ def sembrar(sesion: Session) -> None:
             precio_venta=articulo.precio,
             costo=articulo.costo,
             unidad=articulo.unidad,
+            categoria=CATEGORIA_DE[articulo.nombre],
             stock_minimo=articulo.minimo,
             creado_en=hoy - timedelta(days=DIAS + 1),
         )

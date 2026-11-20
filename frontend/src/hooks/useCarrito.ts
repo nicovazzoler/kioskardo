@@ -18,6 +18,8 @@ function leerGuardado(): ItemCarrito[] {
   }
 }
 
+export type Carrito = ReturnType<typeof useCarrito>
+
 // El carrito se guarda en localStorage: si se recarga la página a mitad de una venta, no se pierde.
 export function useCarrito() {
   const [items, setItems] = useState<ItemCarrito[]>(leerGuardado)

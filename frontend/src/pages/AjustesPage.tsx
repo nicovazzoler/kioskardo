@@ -26,11 +26,11 @@ export function AjustesPage() {
 
   return (
     <section className="mx-auto max-w-5xl p-4 md:p-6">
-      <h1 className="text-2xl font-bold">Ajustes</h1>
+      <h1 className="font-display text-3xl font-semibold">Ajustes</h1>
       {kiosko ? (
         <AjustesTicket kiosko={kiosko} />
       ) : (
-        <p className="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-amber-900">
+        <p className="mt-4 rounded-xl bg-ambar/10 px-4 py-3 text-ambar">
           Los datos del negocio se cargan la primera vez que la app se conecta al servidor. Revisá la conexión.
         </p>
       )}
@@ -76,8 +76,8 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
   return (
     <div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
       <div className="space-y-6">
-        <form onSubmit={guardar} className="space-y-4 rounded-xl bg-white p-5 ring-1 ring-slate-200" noValidate>
-          <h2 className="text-lg font-semibold">Datos del ticket</h2>
+        <form onSubmit={guardar} className="space-y-4 rounded-3xl border border-linea bg-panel p-5" noValidate>
+          <h2 className="font-display text-xl font-semibold">Datos del ticket</h2>
           <Campo etiqueta="Nombre del negocio" error={estado === 'falta-nombre' ? 'Falta el nombre' : null}>
             <input value={campos.nombre} onChange={(e) => cambiar('nombre', e.target.value)} className={claseInput(estado === 'falta-nombre')} />
           </Campo>
@@ -91,15 +91,15 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
             <input value={campos.pie} onChange={(e) => cambiar('pie', e.target.value)} placeholder="¡Gracias por su compra!" className={claseInput()} />
           </Campo>
           <div className="flex items-center gap-3">
-            <button type="submit" className="rounded-lg bg-marca-700 px-6 py-2.5 font-semibold text-white hover:bg-marca-800">
+            <button type="submit" className="rounded-xl bg-tinta px-6 py-2.5 font-semibold text-fondo hover:bg-white">
               Guardar
             </button>
-            {estado === 'guardado' && <span className="text-sm text-emerald-700">✓ Guardado</span>}
+            {estado === 'guardado' && <span className="text-sm text-ok">✓ Guardado</span>}
           </div>
         </form>
 
-        <div className="space-y-4 rounded-xl bg-white p-5 ring-1 ring-slate-200">
-          <h2 className="text-lg font-semibold">Impresora</h2>
+        <div className="space-y-4 rounded-3xl border border-linea bg-panel p-5">
+          <h2 className="font-display text-xl font-semibold">Impresora</h2>
           <Campo etiqueta="Ancho del papel" ayuda="Se guarda en este dispositivo: depende de la impresora que tenga vinculada." grupo>
             <div className="grid grid-cols-2 gap-2">
               {PAPELES.map((papel) => (
@@ -107,8 +107,8 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
                   key={papel.mm}
                   type="button"
                   onClick={() => elegirPapel(papel.columnas)}
-                  className={`rounded-lg border py-2 font-medium ${
-                    columnas === papel.columnas ? 'border-marca-600 bg-marca-50 text-marca-800' : 'border-slate-300 text-slate-600'
+                  className={`rounded-xl border py-2 font-medium ${
+                    columnas === papel.columnas ? 'border-tinta bg-tinta text-fondo' : 'border-borde text-tenue'
                   }`}
                 >
                   {papel.mm} mm
@@ -116,11 +116,11 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
               ))}
             </div>
           </Campo>
-          <button type="button" onClick={() => imprimir(lineas)} className="w-full rounded-lg border border-marca-700 py-2.5 font-semibold text-marca-700 hover:bg-marca-50">
+          <button type="button" onClick={() => imprimir(lineas)} className="w-full rounded-xl border border-tinta py-2.5 font-semibold text-tinta hover:bg-elevado">
             🖨️ Imprimir prueba
           </button>
-          <div className="text-sm text-slate-600">
-            <p className="font-medium text-slate-800">Para conectar la impresora (una sola vez):</p>
+          <div className="text-sm text-tenue">
+            <p className="font-medium text-tinta">Para conectar la impresora (una sola vez):</p>
             <ol className="mt-1 list-decimal space-y-1 pl-5">
               <li>Instalar “RawBT print service” desde Play Store.</li>
               <li>Vincular la impresora en Ajustes de Android → Bluetooth. Si pide PIN, probar 0000 o 1234.</li>
@@ -132,8 +132,8 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
       </div>
 
       <div>
-        <p className="mb-2 text-sm font-medium text-slate-500">Vista previa (venta de ejemplo)</p>
-        <div className="overflow-x-auto rounded-xl bg-slate-100 py-5">
+        <p className="mb-2 text-sm font-medium text-tenue">Vista previa (venta de ejemplo)</p>
+        <div className="overflow-x-auto rounded-xl bg-elevado py-5">
           <VistaTicket lineas={lineas} columnas={columnas} />
         </div>
       </div>

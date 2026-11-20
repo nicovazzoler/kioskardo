@@ -2,6 +2,7 @@
 // Montos en centavos, fechas en ISO 8601, ids en UUID generados en el cliente.
 
 export type Unidad = 'unidad' | 'kg'
+export type Categoria = 'bebidas' | 'golosinas' | 'snacks' | 'cigarrillos' | 'almacen' | 'lacteos' | 'fiambreria' | 'otros'
 export type MotivoStock = 'compra' | 'venta' | 'ajuste' | 'merma'
 export type MedioPago = 'efectivo' | 'debito' | 'credito' | 'transferencia' | 'qr'
 export type TipoMovimientoCaja = 'ingreso' | 'egreso'
@@ -25,6 +26,7 @@ export interface ProductoGuardar {
   unidad: Unidad
   // El precio se tipea al vender (ej: fiambre, con el monto que marca la balanza).
   precio_libre: boolean
+  categoria: Categoria | null
   stock_minimo: number
   activo: boolean
 }

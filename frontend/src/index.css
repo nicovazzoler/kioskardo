@@ -1,11 +1,39 @@
 @import "tailwindcss";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/fraunces";
 
 @theme {
-  --color-marca-50: #f0fdfa;
-  --color-marca-100: #ccfbf1;
-  --color-marca-600: #0d9488;
-  --color-marca-700: #0f766e;
-  --color-marca-800: #115e59;
+  /* Superficies, de la más oscura a la más clara. */
+  --color-lateral: #171411;
+  --color-fondo: #1c1916;
+  --color-panel: #221e1a;
+  --color-tarjeta: #26221e;
+  --color-elevado: #2b2621;
+  --color-linea: #2e2924;
+  --color-borde: #3a342e;
+
+  /* Texto sobre las superficies oscuras. */
+  --color-tinta: #f4ede3;
+  --color-tinta-suave: #d6cbbc;
+  --color-tenue: #a89c8c;
+  --color-apagado: #8f8375;
+
+  --color-ambar: #e8a85c;
+  --color-ok: #9bcb9f;
+  --color-error: #f2a7a0;
+
+  /* Pasteles: van con texto oscuro (fondo) encima. */
+  --color-salvia: #bfd8c4;
+  --color-rosa: #f2c4c4;
+  --color-manteca: #f3d9a4;
+  --color-lavanda: #d9cbea;
+  --color-damasco: #ebcda8;
+  --color-celeste: #c6dce6;
+  --color-durazno: #f2bca4;
+  --color-arena: #ddd3c7;
+
+  --font-sans: "DM Sans Variable", system-ui, sans-serif;
+  --font-display: "Fraunces Variable", Georgia, serif;
 }
 
 html,
@@ -15,7 +43,8 @@ body,
 }
 
 body {
-  @apply bg-slate-50 text-slate-900 antialiased;
+  @apply bg-fondo font-sans text-tinta antialiased;
+  color-scheme: dark;
   /* Evita el zoom por doble toque en botones: en caja se toca rápido y seguido. */
   touch-action: manipulation;
 }

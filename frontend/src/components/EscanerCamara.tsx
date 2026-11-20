@@ -55,14 +55,14 @@ export function EscanerCamara({ alDetectar, alCerrar }: Props) {
   return (
     <Modal titulo="Escanear código" alCerrar={alCerrar}>
       {error ? (
-        <p className="text-red-600">{error}</p>
+        <p className="text-error">{error}</p>
       ) : (
         <div className="relative overflow-hidden rounded-xl bg-black">
           <video ref={video} className="aspect-[4/3] w-full object-cover" muted playsInline />
-          <div className="pointer-events-none absolute inset-x-8 top-1/2 h-0.5 -translate-y-1/2 bg-red-500/80" />
+          <div className="pointer-events-none absolute inset-x-8 top-1/2 h-0.5 -translate-y-1/2 bg-ambar/90" />
         </div>
       )}
-      <p className="mt-3 text-center text-sm text-slate-500">Apuntá al código de barras</p>
+      <p className="mt-3 text-center text-sm text-tenue">Apuntá al código de barras</p>
     </Modal>
   )
 }

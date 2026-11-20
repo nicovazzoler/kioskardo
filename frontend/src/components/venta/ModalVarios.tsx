@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { parsearPesos } from '../../lib/dinero'
-import { claseInput } from '../../lib/estilos'
+import { botonPrimario, claseInput } from '../../lib/estilos'
 import { Campo, InputPesos } from '../Campos'
 import { Modal } from '../Modal'
 
@@ -29,7 +29,7 @@ export function ModalVarios({ alConfirmar, alCerrar }: Props) {
         <Campo etiqueta="Descripción (opcional)">
           <input value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Varios" className={claseInput()} />
         </Campo>
-        <button type="submit" disabled={!monto} className="w-full rounded-lg bg-marca-700 py-3 font-semibold text-white disabled:opacity-40">
+        <button type="submit" disabled={!monto} className={`${botonPrimario} w-full py-3`}>
           Agregar
         </button>
       </form>

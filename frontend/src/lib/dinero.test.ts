@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { centavosATexto, parsearPesos } from './dinero'
+import { centavosATexto, formatearPesosCorto, parsearPesos } from './dinero'
 
 describe('parsearPesos', () => {
   it.each([
@@ -31,5 +31,12 @@ describe('centavosATexto', () => {
     for (const centavos of [0, 1, 99, 150050, 123456789]) {
       expect(parsearPesos(centavosATexto(centavos))).toBe(centavos)
     }
+  })
+})
+
+describe('formatearPesosCorto', () => {
+  it('saca los centavos solo cuando son cero', () => {
+    expect(formatearPesosCorto(250000)).toBe('$\u00a02.500')
+    expect(formatearPesosCorto(150050)).toBe('$\u00a01.500,50')
   })
 })

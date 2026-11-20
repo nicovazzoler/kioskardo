@@ -1,23 +1,28 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useMemo, useState, type KeyboardEvent } from 'react'
 import { EscanerCamara } from '../components/EscanerCamara'
-import { camaraDisponible } from '../lib/camara'
+import { IconoBuscar, IconoCamara } from '../components/Iconos'
 import { FormularioProducto } from '../components/inventario/FormularioProducto'
 import { useEscaner } from '../hooks/useEscaner'
+import { useMediaQuery } from '../hooks/useMediaQuery'
+import { camaraDisponible } from '../lib/camara'
 import { formatearCantidad } from '../lib/cantidad'
+import { CATEGORIAS, datosCategoria } from '../lib/categorias'
 import { db } from '../lib/db'
-import { formatearPesos } from '../lib/dinero'
-import type { Producto } from '../lib/modelos'
+import { formatearPesosCorto } from '../lib/dinero'
+import { botonPrimario, botonSecundario } from '../lib/estilos'
+import type { Categoria, Producto } from '../lib/modelos'
 import { buscarPorCodigo } from '../lib/productos'
 import { normalizar, pareceCodigoDeBarras } from '../lib/texto'
 
-type Filtro = 'activos' | 'stock-bajo' | 'inactivos'
+type Filtro = 'todos' | 'stock-bajo' | 'sin-codigo' | 'inactivos'
 type Formulario = { modo: 'nuevo'; codigo?: string } | { modo: 'editar'; id: string }
 
-const FILTROS: { valor: Filtro; nombre: string }[] = [
-  { valor: 'activos', nombre: 'Todos' },
-  { valor: 'stock-bajo', nombre: 'Stock bajo' },
-  { valor: 'inactivos', nombre: 'Inactivos' },
+const FILTROS: { valor: Filtro; nombre: string; cumple: (p: Producto) => boolean }[] = [
+  { valor: 'todos', nombre: 'Todos', cumple: (p) => p.activo },
+  { valor: 'stock-bajo', nombre: 'Stock bajo', cumple: (p) => p.activo && tieneStockBajo(p) },
+  { valor: 'sin-codigo', nombre: 'Sin código', cumple: (p) => p.activo && !p.codigo_barras },
+  { valor: 'inactivos', nombre: 'Inactivos', cumple: (p) => !p.activo },
 ]
 
 function tieneStockBajo(producto: Producto) {
@@ -28,18 +33,23 @@ function tieneStockBajo(producto: Producto) {
 export function InventarioPage() {
   const productos = useLiveQuery(() => db.productos.orderBy('nombre').toArray(), [])
   const [busqueda, setBusqueda] = useState('')
-  const [filtro, setFiltro] = useState<Filtro>('activos')
+  const [filtro, setFiltro] = useState<Filtro>('todos')
+  const [categoria, setCategoria] = useState<Categoria | null>(null)
   const [formulario, setFormulario] = useState<Formulario | null>(null)
   const [camara, setCamara] = useState(false)
+  const conPanel = useMediaQuery('(min-width: 1024px)')
 
+  const termino = normalizar(busqueda)
   const visibles = useMemo(() => {
-    const termino = normalizar(busqueda)
-    return (productos ?? []).filter((p) => {
-      if (filtro === 'inactivos' ? p.activo : !p.activo) return false
-      if (filtro === 'stock-bajo' && !tieneStockBajo(p)) return false
-      return !termino || normalizar(p.nombre).includes(termino) || p.codigo_barras?.includes(termino)
-    })
-  }, [productos, busqueda, filtro])
+    const todos = productos ?? []
+    // Buscando, se recorre todo el catálogo: ni el filtro ni la categoría limitan la búsqueda.
+    if (termino) return todos.filter((p) => normalizar(p.nombre).includes(termino) || p.codigo_barras?.includes(termino))
+    const cumple = FILTROS.find((f) => f.valor === filtro)!.cumple
+    return todos.filter((p) => cumple(p) && (categoria === null || p.categoria === categoria))
+  }, [productos, termino, filtro, categoria])
+
+  const cuantos = (f: (typeof FILTROS)[number]) => (productos ?? []).filter(f.cumple).length
+  const conStockBajo = cuantos(FILTROS[1])
 
   // Escaneo desde cualquier lado: si el código existe se edita, si no se da de alta.
   const procesarCodigo = async (codigo: string) => {
@@ -48,7 +58,8 @@ export function InventarioPage() {
     setFormulario(producto ? { modo: 'editar', id: producto.id } : { modo: 'nuevo', codigo })
   }
 
-  useEscaner(procesarCodigo, formulario === null && !camara)
+  // Con el panel al costado se puede seguir escaneando para pasar de un producto a otro.
+  useEscaner(procesarCodigo, !camara && (conPanel || formulario === null))
 
   const alPresionarEnBusqueda = (evento: KeyboardEvent<HTMLInputElement>) => {
     if (evento.key !== 'Enter') return
@@ -56,93 +67,128 @@ export function InventarioPage() {
     else if (visibles.length === 1) setFormulario({ modo: 'editar', id: visibles[0].id })
   }
 
+  const editando = formulario?.modo === 'editar' ? formulario.id : null
+  const formularioAbierto = formulario && (
+    <FormularioProducto
+      comoPanel={conPanel}
+      productoId={formulario.modo === 'editar' ? formulario.id : undefined}
+      codigoInicial={formulario.modo === 'nuevo' ? formulario.codigo : undefined}
+      alCerrar={() => setFormulario(null)}
+      alEditarOtro={(otro) => setFormulario({ modo: 'editar', id: otro.id })}
+    />
+  )
+
   return (
-    <section className="mx-auto max-w-4xl p-4 md:p-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Inventario</h1>
-        <button
-          onClick={() => setFormulario({ modo: 'nuevo' })}
-          className="rounded-lg bg-marca-700 px-4 py-2.5 font-semibold text-white hover:bg-marca-800"
-        >
-          + Nuevo
-        </button>
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <input
-          type="search"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          onKeyDown={alPresionarEnBusqueda}
-          placeholder="Buscar por nombre o escanear código…"
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-base"
-        />
-        {camaraDisponible && (
-          <button onClick={() => setCamara(true)} className="rounded-lg border border-slate-300 bg-white px-4 text-xl" aria-label="Escanear con cámara">
-            📷
-          </button>
-        )}
-      </div>
-
-      <div className="mt-3 flex gap-2 overflow-x-auto">
-        {FILTROS.map((f) => (
-          <button
-            key={f.valor}
-            onClick={() => setFiltro(f.valor)}
-            className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium ${
-              filtro === f.valor ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 ring-1 ring-slate-200'
-            }`}
-          >
-            {f.nombre}
-          </button>
-        ))}
-      </div>
-
-      {productos === undefined ? null : visibles.length === 0 ? (
-        <ListaVacia hayProductos={productos.length > 0} busqueda={busqueda} alCrear={() => setFormulario({ modo: 'nuevo', codigo: pareceCodigoDeBarras(busqueda) ? busqueda.trim() : undefined })} />
-      ) : (
-        <ul className="mt-4 divide-y divide-slate-100 overflow-hidden rounded-xl bg-white ring-1 ring-slate-200">
-          {visibles.map((producto) => (
-            <li key={producto.id}>
-              <button
-                onClick={() => setFormulario({ modo: 'editar', id: producto.id })}
-                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{producto.nombre}</p>
-                  <p className="truncate font-mono text-xs text-slate-400">{producto.codigo_barras ?? 'sin código'}</p>
-                </div>
-                <span
-                  className={`rounded-md px-2 py-0.5 text-sm tabular-nums ${
-                    tieneStockBajo(producto) ? 'bg-red-50 text-red-700' : 'text-slate-500'
-                  }`}
-                >
-                  {producto.precio_libre ? '—' : formatearCantidad(producto.stock, producto.unidad)}
-                </span>
-                <span className="w-28 text-right font-semibold tabular-nums">
-                  {producto.precio_libre ? (
-                    <span className="text-sm font-normal text-slate-500">Precio libre</span>
-                  ) : (
-                    <>
-                      {formatearPesos(producto.precio_venta)}
-                      {producto.unidad === 'kg' && <span className="text-xs font-normal text-slate-400">/kg</span>}
-                    </>
-                  )}
-                </span>
+    <div className="flex h-full">
+      <section className="min-w-0 flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="font-display text-3xl font-semibold">Inventario</h1>
+            {productos && (
+              <p className="text-sm text-tenue">
+                {cuantos(FILTROS[0])} productos{conStockBajo > 0 && ` · ${conStockBajo} con stock bajo`}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            {camaraDisponible && (
+              <button onClick={() => setCamara(true)} className={`${botonSecundario} flex h-11 items-center gap-2 px-4 text-sm`}>
+                <IconoCamara tamano={18} />
+                Escanear
               </button>
-            </li>
-          ))}
-        </ul>
-      )}
+            )}
+            <button onClick={() => setFormulario({ modo: 'nuevo' })} className={`${botonPrimario} h-11 px-4 text-sm`}>
+              + Nuevo producto
+            </button>
+          </div>
+        </div>
 
-      {formulario && (
-        <FormularioProducto
-          productoId={formulario.modo === 'editar' ? formulario.id : undefined}
-          codigoInicial={formulario.modo === 'nuevo' ? formulario.codigo : undefined}
-          alCerrar={() => setFormulario(null)}
-          alEditarOtro={(otro) => setFormulario({ modo: 'editar', id: otro.id })}
-        />
+        <label className="mt-4 flex h-12 items-center gap-3 rounded-2xl border border-borde bg-tarjeta px-4 focus-within:border-ambar">
+          <span className="text-tenue">
+            <IconoBuscar />
+          </span>
+          <input
+            type="search"
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            onKeyDown={alPresionarEnBusqueda}
+            placeholder="Buscar por nombre o código, en todo el catálogo…"
+            aria-label="Buscar producto"
+            className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-apagado"
+          />
+        </label>
+
+        {!termino && (
+          <div className="-mx-4 mt-3 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:px-0">
+            {FILTROS.map((f) => (
+              <button
+                key={f.valor}
+                onClick={() => setFiltro(f.valor)}
+                aria-pressed={filtro === f.valor}
+                className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-semibold ${
+                  filtro === f.valor ? 'bg-tinta text-fondo' : 'border border-borde text-tinta-suave hover:bg-elevado'
+                }`}
+              >
+                {f.valor === 'stock-bajo' && <span className="h-2 w-2 rounded-full bg-ambar" />}
+                {f.nombre} {f.valor !== 'todos' && <span className="tabular-nums opacity-70">{cuantos(f)}</span>}
+              </button>
+            ))}
+            <span className="mx-1 hidden h-5 w-px bg-borde sm:block" />
+            {CATEGORIAS.map((c) => (
+              <button
+                key={c.valor}
+                onClick={() => setCategoria(categoria === c.valor ? null : c.valor)}
+                aria-pressed={categoria === c.valor}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-sm font-semibold text-fondo ${c.color} ${
+                  categoria === c.valor ? 'outline-2 outline-offset-2 outline-tinta' : categoria ? 'opacity-50' : ''
+                }`}
+              >
+                {c.nombre}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {productos === undefined ? null : visibles.length === 0 ? (
+          <ListaVacia
+            hayProductos={productos.length > 0}
+            busqueda={busqueda}
+            alCrear={() => setFormulario({ modo: 'nuevo', codigo: pareceCodigoDeBarras(busqueda) ? busqueda.trim() : undefined })}
+          />
+        ) : (
+          <div className="mt-4 overflow-hidden rounded-2xl border border-linea bg-panel">
+            <div className="hidden grid-cols-[minmax(0,1fr)_110px_80px_100px_60px] gap-3 border-b border-linea px-4 py-2.5 text-xs text-tenue md:grid">
+              <span>Producto</span>
+              <span>Categoría</span>
+              <span className="text-right">Stock</span>
+              <span className="text-right">Precio</span>
+              <span className="text-right">Margen</span>
+            </div>
+            <ul className="divide-y divide-linea">
+              {visibles.map((producto) => (
+                <FilaProducto
+                  key={producto.id}
+                  producto={producto}
+                  elegido={producto.id === editando}
+                  alElegir={() => setFormulario({ modo: 'editar', id: producto.id })}
+                />
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {conPanel && (
+        <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-linea bg-panel p-6">
+          {formularioAbierto ?? (
+            <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-tenue">
+              <p className="font-display text-xl text-tinta-suave">Elegí un producto</p>
+              <p className="text-sm">Tocalo en la lista o escaneá su código para editarlo y cargar stock.</p>
+            </div>
+          )}
+        </aside>
       )}
+      {!conPanel && formularioAbierto}
 
       {camara && (
         <EscanerCamara
@@ -153,26 +199,76 @@ export function InventarioPage() {
           }}
         />
       )}
-    </section>
+    </div>
+  )
+}
+
+function FilaProducto({ producto, elegido, alElegir }: { producto: Producto; elegido: boolean; alElegir: () => void }) {
+  const categoria = datosCategoria(producto.categoria)
+  const bajo = tieneStockBajo(producto)
+  const margen = producto.costo && !producto.precio_libre ? Math.round(((producto.precio_venta - producto.costo) / producto.costo) * 100) : null
+
+  return (
+    <li>
+      <button
+        onClick={alElegir}
+        aria-current={elegido}
+        className={`grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-4 py-2.5 text-left md:grid-cols-[minmax(0,1fr)_110px_80px_100px_60px] ${
+          elegido ? 'bg-elevado shadow-[inset_0_0_0_1.5px_var(--color-ambar)]' : 'hover:bg-tarjeta'
+        } ${producto.activo ? '' : 'opacity-50'}`}
+      >
+        <span className="min-w-0">
+          <span className="block truncate font-semibold">{producto.nombre}</span>
+          <span className="block truncate font-mono text-[11px] text-apagado">{producto.codigo_barras ?? 'sin código'}</span>
+        </span>
+        <span className="hidden md:block">
+          {categoria ? (
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold text-fondo ${categoria.color}`}>{categoria.nombre}</span>
+          ) : (
+            <span className="text-xs text-apagado">—</span>
+          )}
+        </span>
+        <span className="justify-self-end text-sm tabular-nums">
+          {producto.precio_libre ? (
+            <span className="text-apagado">—</span>
+          ) : bajo ? (
+            <span className="rounded-full bg-ambar px-2.5 py-0.5 font-bold text-fondo">{formatearCantidad(producto.stock, producto.unidad)}</span>
+          ) : (
+            formatearCantidad(producto.stock, producto.unidad)
+          )}
+        </span>
+        <span className="text-right font-semibold tabular-nums">
+          {producto.precio_libre ? (
+            <span className="text-sm font-normal text-tenue">Precio libre</span>
+          ) : (
+            <>
+              {formatearPesosCorto(producto.precio_venta)}
+              {producto.unidad === 'kg' && <span className="text-xs font-normal text-tenue"> /kg</span>}
+            </>
+          )}
+        </span>
+        <span className="hidden text-right text-sm text-tenue tabular-nums md:block">{margen === null ? '—' : `${margen}%`}</span>
+      </button>
+    </li>
   )
 }
 
 function ListaVacia({ hayProductos, busqueda, alCrear }: { hayProductos: boolean; busqueda: string; alCrear: () => void }) {
   return (
-    <div className="mt-4 rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
+    <div className="mt-4 rounded-2xl border border-dashed border-borde p-8 text-center text-tenue">
       {hayProductos ? (
         <>
           <p>No hay productos que coincidan.</p>
           {busqueda && (
-            <button onClick={alCrear} className="mt-3 font-medium text-marca-700 underline">
+            <button onClick={alCrear} className="mt-3 font-semibold text-tinta underline">
               Crear {pareceCodigoDeBarras(busqueda) ? `producto con código ${busqueda.trim()}` : 'producto nuevo'}
             </button>
           )}
         </>
       ) : (
         <>
-          <p className="font-medium text-slate-700">Todavía no hay productos cargados.</p>
-          <p className="mt-1">Escaneá un código con la pistola o tocá “+ Nuevo” para empezar.</p>
+          <p className="font-semibold text-tinta-suave">Todavía no hay productos cargados.</p>
+          <p className="mt-1">Escaneá un código con la pistola o tocá “+ Nuevo producto” para empezar.</p>
         </>
       )}
     </div>

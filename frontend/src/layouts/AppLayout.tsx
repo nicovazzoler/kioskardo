@@ -1,13 +1,14 @@
 import { NavLink, Outlet } from 'react-router'
 import { EstadoConexion } from '../components/EstadoConexion'
+import { IconoAjustes, IconoCaja, IconoInventario, IconoPantalla, IconoVenta } from '../components/Iconos'
 import { IngresoClave } from '../components/IngresoClave'
 import { useNecesitaClave } from '../lib/sesion'
 
 const SECCIONES = [
-  { ruta: '/', nombre: 'Venta', icono: '🛒' },
-  { ruta: '/inventario', nombre: 'Inventario', icono: '📦' },
-  { ruta: '/caja', nombre: 'Caja', icono: '💵' },
-  { ruta: '/ajustes', nombre: 'Ajustes', icono: '⚙️' },
+  { ruta: '/', nombre: 'Venta', Icono: IconoVenta },
+  { ruta: '/inventario', nombre: 'Inventario', Icono: IconoInventario },
+  { ruta: '/caja', nombre: 'Caja', Icono: IconoCaja },
+  { ruta: '/ajustes', nombre: 'Ajustes', Icono: IconoAjustes },
 ]
 
 // Celular: barra de navegación abajo, al alcance del pulgar.
@@ -17,41 +18,50 @@ export function AppLayout() {
 
   return (
     <div className="flex h-full flex-col md:flex-row">
-      <nav className="order-last flex shrink-0 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] md:order-first md:w-56 md:flex-col md:border-t-0 md:border-r md:pb-0">
-        <div className="hidden items-center gap-2 px-5 py-5 text-lg font-bold text-marca-700 md:flex">
-          <img src="/logo.svg" alt="" className="h-8 w-8" />
-          Kioskardo
+      <nav className="order-last flex shrink-0 border-t border-linea bg-lateral pb-[env(safe-area-inset-bottom)] md:order-first md:w-52 md:flex-col md:gap-1 md:border-t-0 md:border-r md:px-4 md:py-5">
+        <div className="hidden items-center gap-2.5 px-2 pb-5 md:flex">
+          <img src="/logo.svg" alt="" className="h-9 w-9" />
+          <span className="font-display text-xl font-semibold">Kioskardo</span>
         </div>
-        {SECCIONES.map((seccion) => (
+        {SECCIONES.map(({ ruta, nombre, Icono }) => (
           <NavLink
-            key={seccion.ruta}
-            to={seccion.ruta}
-            end={seccion.ruta === '/'}
+            key={ruta}
+            to={ruta}
+            end={ruta === '/'}
             className={({ isActive }) =>
-              `flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium md:mx-3 md:flex-none md:flex-row md:gap-3 md:rounded-lg md:px-3 md:py-3 md:text-base ${
-                isActive ? 'text-marca-700 md:bg-marca-50' : 'text-slate-500 hover:text-slate-800'
+              `group flex flex-1 flex-col items-center gap-1 py-2 text-xs md:flex-none md:flex-row md:gap-3 md:rounded-xl md:px-3 md:py-2.5 md:text-[15px] ${
+                isActive ? 'font-semibold text-tinta md:bg-elevado' : 'text-tenue hover:text-tinta'
               }`
             }
           >
-            <span className="text-2xl md:text-xl">{seccion.icono}</span>
-            {seccion.nombre}
+            {({ isActive }) => (
+              <>
+                <span className={isActive ? 'text-ambar' : ''}>
+                  <Icono tamano={22} />
+                </span>
+                {nombre}
+              </>
+            )}
           </NavLink>
         ))}
-        <a
-          href="/pantalla"
-          target="_blank"
-          className="mx-3 mt-auto mb-4 hidden rounded-lg border border-slate-200 px-3 py-2 text-center text-sm text-slate-600 hover:bg-slate-50 md:block"
-        >
-          Abrir pantalla cliente ↗
-        </a>
+        <div className="mt-auto hidden flex-col gap-3 md:flex">
+          <a href="/pantalla" target="_blank" className="flex items-center gap-2.5 rounded-xl border border-borde px-3 py-2.5 text-sm hover:bg-elevado">
+            <IconoPantalla tamano={18} />
+            Pantalla del cliente
+          </a>
+          <div className="px-2">
+            <EstadoConexion />
+          </div>
+        </div>
       </nav>
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 md:px-6">
-          <span className="font-semibold md:hidden">Kioskardo</span>
-          <span className="ml-auto">
-            <EstadoConexion />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between gap-3 border-b border-linea px-4 py-3 md:hidden">
+          <span className="flex items-center gap-2 font-display text-lg font-semibold">
+            <img src="/logo.svg" alt="" className="h-7 w-7" />
+            Kioskardo
           </span>
+          <EstadoConexion />
         </header>
         {/* Sin padding: cada página decide el suyo (la venta usa todo el alto y ancho). */}
         <main className="min-h-0 flex-1 overflow-y-auto">
