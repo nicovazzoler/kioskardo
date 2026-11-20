@@ -7,8 +7,6 @@ vendiendo sin conexión: cuando vuelve internet, sincroniza solo.
 > (fase 6) está hecha pero falta probarla con la impresora real. Falta la pantalla del cliente en
 > vivo (fase 5).
 
-Para entender cómo está armado el código: [docs/GUIA.md](docs/GUIA.md).
-
 ## Qué hace
 
 - **Venta:** escaneo con pistola lectora o con la cámara del celular, búsqueda en todo el catálogo
@@ -120,7 +118,7 @@ Escribe en la base que diga `DATABASE_URL` y, si no apunta a `localhost`, se nie
 
 ## Deploy
 
-En Railway, con el `Dockerfile` de la raíz. Pasos y variables en [docs/DEPLOY.md](docs/DEPLOY.md).
+En Railway, con el `Dockerfile` de la raíz.
 Backups diarios de la base con GitHub Actions: [backup/LEEME.md](backup/LEEME.md).
 
 En desarrollo la API no pide clave. Para probar la pantalla de ingreso, agregar
