@@ -77,8 +77,8 @@ export const IconoPantalla = (p: PropsIcono) => (
   </Icono>
 )
 
-export const IconoPesos = (p: PropsIcono) => (
+export const IconoTilde = (p: PropsIcono) => (
   <Icono {...p}>
-    <path d="M12 3v18M16.5 7.5c0-1.9-2-3-4.5-3s-4.5 1.2-4.5 3.1c0 4.4 9 2.4 9 6.8 0 2-2 3.1-4.5 3.1s-4.5-1.1-4.5-3" />
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
   </Icono>
 )

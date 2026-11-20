@@ -26,15 +26,15 @@ export function ModalCierre({ esperado, alConfirmar, alCerrar }: Props) {
     <Modal titulo="Cerrar caja" alCerrar={alCerrar}>
       <form onSubmit={confirmar} className="space-y-4">
         <p className="text-tinta-suave">Contá la plata del cajón y anotá cuánto hay. La app te dice si sobra o falta.</p>
-        <div className="flex items-baseline justify-between rounded-2xl bg-elevado px-4 py-3">
+        <div className="flex items-baseline justify-between border-y border-linea py-3">
           <span>Debería haber</span>
-          <span className="font-display text-3xl font-semibold tabular-nums">{formatearPesosCorto(esperado)}</span>
+          <span className="font-display text-3xl font-semibold tracking-tight text-manteca tabular-nums">{formatearPesosCorto(esperado)}</span>
         </div>
         <Campo etiqueta="Efectivo contado" ayuda="Contá solo los billetes y monedas del cajón.">
           <InputPesos autoFocus valor={texto} alCambiar={setTexto} />
         </Campo>
         {contado !== null && (
-          <div className="flex items-baseline justify-between rounded-2xl bg-elevado px-4 py-3">
+          <div className="flex items-baseline justify-between border-b border-linea pb-3">
             <span>Diferencia</span>
             <Diferencia monto={contado - esperado} grande />
           </div>

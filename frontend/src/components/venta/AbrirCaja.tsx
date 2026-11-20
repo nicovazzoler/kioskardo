@@ -15,8 +15,8 @@ export function AbrirCaja() {
   }
 
   return (
-    <form onSubmit={abrir} className="mx-4 mt-10 max-w-sm rounded-3xl border border-borde bg-panel p-6 shadow-2xl sm:mx-auto">
-      <h1 className="font-display text-3xl font-semibold">Abrir caja</h1>
+    <form onSubmit={abrir} className="mx-4 mt-12 max-w-sm sm:mx-auto">
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Abrir caja</h1>
       <p className="mt-1 text-sm text-tenue">Para empezar a vender, contá el efectivo que hay en la caja.</p>
       <div className="mt-5">
         <Campo etiqueta="Efectivo inicial" error={monto === null ? 'Monto inválido' : null}>

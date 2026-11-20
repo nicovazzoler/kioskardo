@@ -1,22 +1,22 @@
 @import "tailwindcss";
 @import "@fontsource-variable/dm-sans";
-@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/space-grotesk";
 
 @theme {
   /* Superficies, de la más oscura a la más clara. */
-  --color-lateral: #171411;
-  --color-fondo: #1c1916;
-  --color-panel: #221e1a;
-  --color-tarjeta: #26221e;
-  --color-elevado: #2b2621;
-  --color-linea: #2e2924;
-  --color-borde: #3a342e;
+  --color-lateral: #0b111c;
+  --color-fondo: #0f1626;
+  --color-panel: #131c2e;
+  --color-tarjeta: #172236;
+  --color-elevado: #1d2a41;
+  --color-linea: #222f47;
+  --color-borde: #2d3c58;
 
   /* Texto sobre las superficies oscuras. */
-  --color-tinta: #f4ede3;
-  --color-tinta-suave: #d6cbbc;
-  --color-tenue: #a89c8c;
-  --color-apagado: #8f8375;
+  --color-tinta: #eef2f9;
+  --color-tinta-suave: #c9d3e4;
+  --color-tenue: #93a1ba;
+  --color-apagado: #7a89a4;
 
   --color-ambar: #e8a85c;
   --color-ok: #9bcb9f;
@@ -33,7 +33,7 @@
   --color-arena: #ddd3c7;
 
   --font-sans: "DM Sans Variable", system-ui, sans-serif;
-  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-display: "Space Grotesk Variable", system-ui, sans-serif;
 }
 
 html,

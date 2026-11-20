@@ -4,7 +4,7 @@ import { Campo } from '../components/Campos'
 import { IconoCamara, IconoPantalla } from '../components/Iconos'
 import { VistaTicket } from '../components/ticket/VistaTicket'
 import { camaraDisponible } from '../lib/camara'
-import { claseInput } from '../lib/estilos'
+import { botonPrimario, claseInput, claseOpcion } from '../lib/estilos'
 import { guardarColumnas, imprimir, leerColumnas, PAPELES } from '../lib/impresora'
 import { guardarKiosko, useKiosko } from '../lib/kiosko'
 import type { Kiosko, KioskoGuardar, Venta } from '../lib/modelos'
@@ -29,11 +29,11 @@ export function AjustesPage() {
 
   return (
     <section className="mx-auto max-w-5xl p-4 md:p-6">
-      <h1 className="font-display text-3xl font-semibold">Ajustes</h1>
+      <h1 className="font-display text-3xl font-semibold tracking-tight">Ajustes</h1>
       {kiosko ? (
         <AjustesTicket kiosko={kiosko} />
       ) : (
-        <p className="mt-4 rounded-xl bg-ambar/10 px-4 py-3 text-ambar">
+        <p className="mt-4 text-ambar">
           Los datos del negocio se cargan la primera vez que la app se conecta al servidor. Revisá la conexión.
         </p>
       )}
@@ -44,13 +44,13 @@ export function AjustesPage() {
 
 function OtrosDispositivos() {
   return (
-    <div className="mt-6 space-y-4 rounded-3xl border border-linea bg-panel p-5">
+    <div className="mt-8 space-y-3 border-t border-linea pt-5">
       <div>
-        <h2 className="font-display text-xl font-semibold">Usar este dispositivo como…</h2>
+        <h2 className="font-display text-xl font-semibold tracking-tight">Usar este dispositivo como…</h2>
         <p className="mt-1 text-sm text-tenue">Se conecta en vivo con la caja abierta en la tablet. Los dos necesitan internet.</p>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Link to="/pantalla" className="flex gap-3 rounded-2xl border border-borde p-4 hover:bg-elevado">
+      <div className="grid sm:grid-cols-2 sm:gap-x-8">
+        <Link to="/pantalla" className="flex gap-3 border-b border-linea py-3 text-tinta hover:text-ambar">
           <IconoPantalla tamano={24} />
           <span>
             <span className="block font-semibold">Pantalla del cliente</span>
@@ -58,7 +58,7 @@ function OtrosDispositivos() {
           </span>
         </Link>
         {camaraDisponible ? (
-          <Link to="/escaner" className="flex gap-3 rounded-2xl border border-borde p-4 hover:bg-elevado">
+          <Link to="/escaner" className="flex gap-3 border-b border-linea py-3 text-tinta hover:text-ambar">
             <IconoCamara tamano={24} />
             <span>
               <span className="block font-semibold">Escáner para la caja</span>
@@ -66,7 +66,7 @@ function OtrosDispositivos() {
             </span>
           </Link>
         ) : (
-          <div className="flex gap-3 rounded-2xl border border-linea p-4 text-apagado">
+          <div className="flex gap-3 border-b border-linea py-3 text-apagado">
             <IconoCamara tamano={24} />
             <span>
               <span className="block font-semibold">Escáner para la caja</span>
@@ -116,10 +116,10 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
   }
 
   return (
-    <div className="mt-4 grid gap-6 md:grid-cols-[1fr_auto] md:items-start">
-      <div className="space-y-6">
-        <form onSubmit={guardar} className="space-y-4 rounded-3xl border border-linea bg-panel p-5" noValidate>
-          <h2 className="font-display text-xl font-semibold">Datos del ticket</h2>
+    <div className="mt-4 grid gap-8 md:grid-cols-[1fr_auto] md:items-start">
+      <div className="space-y-8">
+        <form onSubmit={guardar} className="space-y-4 border-t border-linea pt-5" noValidate>
+          <h2 className="font-display text-xl font-semibold tracking-tight">Datos del ticket</h2>
           <Campo etiqueta="Nombre del negocio" error={estado === 'falta-nombre' ? 'Falta el nombre' : null}>
             <input value={campos.nombre} onChange={(e) => cambiar('nombre', e.target.value)} className={claseInput(estado === 'falta-nombre')} />
           </Campo>
@@ -133,33 +133,32 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
             <input value={campos.pie} onChange={(e) => cambiar('pie', e.target.value)} placeholder="¡Gracias por su compra!" className={claseInput()} />
           </Campo>
           <div className="flex items-center gap-3">
-            <button type="submit" className="rounded-xl bg-tinta px-6 py-2.5 font-semibold text-fondo hover:bg-white">
+            <button type="submit" className={`${botonPrimario} px-6 py-2.5`}>
               Guardar
             </button>
-            {estado === 'guardado' && <span className="text-sm text-ok">✓ Guardado</span>}
+            {estado === 'guardado' && <span className="text-sm font-semibold text-ok">Guardado</span>}
           </div>
         </form>
 
-        <div className="space-y-4 rounded-3xl border border-linea bg-panel p-5">
-          <h2 className="font-display text-xl font-semibold">Impresora</h2>
+        <div className="space-y-4 border-t border-linea pt-5">
+          <h2 className="font-display text-xl font-semibold tracking-tight">Impresora</h2>
           <Campo etiqueta="Ancho del papel" ayuda="Se guarda en este dispositivo: depende de la impresora que tenga vinculada." grupo>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="flex gap-6 border-b border-linea">
               {PAPELES.map((papel) => (
                 <button
                   key={papel.mm}
                   type="button"
                   onClick={() => elegirPapel(papel.columnas)}
-                  className={`rounded-xl border py-2 font-medium ${
-                    columnas === papel.columnas ? 'border-tinta bg-tinta text-fondo' : 'border-borde text-tenue'
-                  }`}
+                  aria-pressed={columnas === papel.columnas}
+                  className={`h-11 ${claseOpcion(columnas === papel.columnas)}`}
                 >
                   {papel.mm} mm
                 </button>
               ))}
             </div>
           </Campo>
-          <button type="button" onClick={() => imprimir(lineas)} className="w-full rounded-xl border border-tinta py-2.5 font-semibold text-tinta hover:bg-elevado">
-            🖨️ Imprimir prueba
+          <button type="button" onClick={() => imprimir(lineas)} className="-ml-2 rounded-md px-2 py-2.5 font-semibold text-ambar hover:bg-elevado">
+            Imprimir prueba
           </button>
           <div className="text-sm text-tenue">
             <p className="font-medium text-tinta">Para conectar la impresora (una sola vez):</p>
@@ -175,7 +174,7 @@ function AjustesTicket({ kiosko }: { kiosko: Kiosko }) {
 
       <div>
         <p className="mb-2 text-sm font-medium text-tenue">Vista previa (venta de ejemplo)</p>
-        <div className="overflow-x-auto rounded-xl bg-elevado py-5">
+        <div className="overflow-x-auto rounded-sm bg-elevado py-5">
           <VistaTicket lineas={lineas} columnas={columnas} />
         </div>
       </div>

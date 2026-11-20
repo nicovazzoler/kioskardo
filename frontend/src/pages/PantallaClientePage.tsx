@@ -35,7 +35,7 @@ export function PantallaClientePage() {
       <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-6 py-5 md:px-10">
         <span className="flex min-w-0 items-center gap-3">
           <img src="/logo.svg" alt="" className="h-10 w-10 shrink-0" />
-          <span className="truncate font-display text-2xl font-semibold md:text-3xl">{kiosko?.nombre ?? 'Kioskardo'}</span>
+          <span className="truncate font-display text-2xl font-semibold tracking-tight md:text-3xl">{kiosko?.nombre ?? 'Kioskardo'}</span>
         </span>
         <span className="flex shrink-0 items-center gap-4">
           <EstadoSala estado={estado} cajas={cajas} />
@@ -49,7 +49,7 @@ export function PantallaClientePage() {
         <Gracias total={cobrada.total} vuelto={cobrada.vuelto} />
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-          <p className="font-display text-6xl font-semibold md:text-7xl">¡Hola!</p>
+          <p className="font-display text-6xl font-semibold tracking-tight md:text-7xl">¡Hola!</p>
           <p className="text-2xl text-tenue">Esperando la próxima venta…</p>
         </div>
       )}
@@ -71,12 +71,12 @@ function VentaEnCurso({ venta }: { venta: VentaEnVivo }) {
       <ul ref={lista} className="min-h-0 flex-1 divide-y divide-linea overflow-y-auto px-6 md:px-10">
         {venta.items.map((linea) => (
           <li key={linea.id} className="flex items-center gap-3 py-4 md:gap-4">
-            <span className="w-16 shrink-0 rounded-xl bg-elevado px-2 py-2 text-center font-bold tabular-nums md:w-20 md:text-xl">{linea.cantidad}</span>
+            <span className="w-16 shrink-0 text-lg font-bold text-ambar tabular-nums md:w-20 md:text-2xl">{linea.cantidad}</span>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xl font-semibold md:text-3xl">{linea.nombre}</p>
               <p className="text-tenue md:text-lg">{linea.detalle}</p>
             </div>
-            <span className="shrink-0 font-display text-xl font-semibold tabular-nums md:text-3xl">{formatearPesosCorto(linea.subtotal)}</span>
+            <span className="shrink-0 font-display text-xl font-semibold tracking-tight tabular-nums md:text-3xl">{formatearPesosCorto(linea.subtotal)}</span>
           </li>
         ))}
       </ul>
@@ -85,13 +85,13 @@ function VentaEnCurso({ venta }: { venta: VentaEnVivo }) {
           <div className="flex flex-wrap items-baseline justify-between gap-2 text-2xl">
             <span className="text-tenue">Paga con {formatearPesosCorto(venta.recibido!)}</span>
             <span>
-              Vuelto <strong className="font-display text-4xl text-salvia tabular-nums">{formatearPesosCorto(vuelto)}</strong>
+              Vuelto <strong className="font-display text-4xl tracking-tight text-salvia tabular-nums">{formatearPesosCorto(vuelto)}</strong>
             </span>
           </div>
         )}
         <div className="flex items-baseline justify-between gap-4">
           <span className="text-3xl text-tenue">Total</span>
-          <span className="font-display text-6xl font-semibold tabular-nums md:text-8xl">{formatearPesosCorto(venta.total)}</span>
+          <span className="font-display text-6xl font-semibold tracking-tight tabular-nums md:text-8xl">{formatearPesosCorto(venta.total)}</span>
         </div>
       </footer>
     </>
@@ -101,11 +101,11 @@ function VentaEnCurso({ venta }: { venta: VentaEnVivo }) {
 function Gracias({ total, vuelto }: { total: number; vuelto: number }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 text-center">
-      <p className="font-display text-6xl font-semibold md:text-7xl">¡Gracias!</p>
+      <p className="font-display text-6xl font-semibold tracking-tight md:text-7xl">¡Gracias!</p>
       <p className="text-3xl text-tinta-suave">Total {formatearPesosCorto(total)}</p>
       {vuelto > 0 && (
-        <p className="rounded-3xl bg-salvia px-8 py-4 text-3xl text-fondo">
-          Tu vuelto <strong className="font-display text-5xl tabular-nums">{formatearPesosCorto(vuelto)}</strong>
+        <p className="text-3xl">
+          Tu vuelto <strong className="font-display text-6xl tracking-tight text-salvia tabular-nums">{formatearPesosCorto(vuelto)}</strong>
         </p>
       )}
     </div>

@@ -8,6 +8,7 @@ import { usePantallaEncendida } from '../hooks/usePantallaEncendida'
 import { useVivo } from '../hooks/useVivo'
 import { camaraDisponible } from '../lib/camara'
 import { formatearPesosCorto } from '../lib/dinero'
+import { rotulo } from '../lib/estilos'
 import { buscarPorCodigo } from '../lib/productos'
 import { crearFiltroDeRepetidos } from '../lib/repetidos'
 import type { VentaEnVivo } from '../lib/vivo'
@@ -62,13 +63,13 @@ export function EscanerPage() {
         <Link to="/" className="text-sm text-tinta-suave">
           ← Volver
         </Link>
-        <span className="font-display text-lg font-semibold">Escáner</span>
+        <span className="font-display text-lg font-semibold tracking-tight">Escáner</span>
         <EstadoSala estado={estado} cajas={cajas} />
       </header>
 
       <div className="space-y-3 p-4">
         {!camaraDisponible ? (
-          <p className="rounded-xl bg-ambar/10 px-4 py-3 text-ambar">Este navegador no puede leer códigos con la cámara. Usá Chrome en Android.</p>
+          <p className="py-3 text-ambar">Este navegador no puede leer códigos con la cámara. Usá Chrome en Android.</p>
         ) : activa ? (
           <>
             <VisorCamara video={video} error={error} />
@@ -79,15 +80,15 @@ export function EscanerPage() {
         ) : (
           <button
             onClick={prender}
-            className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-borde text-tinta-suave"
+            className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-md bg-tarjeta text-ambar hover:text-tinta"
           >
             <IconoCamara tamano={40} />
             <span className="text-lg font-semibold">Tocá para escanear</span>
           </button>
         )}
         {aviso && (
-          <p className={`rounded-xl px-4 py-3 font-semibold ${aviso.ok ? 'bg-ok/15 text-ok' : 'bg-error/15 text-error'}`}>
-            {aviso.ok ? '✓ ' : ''}
+          <p className={`font-semibold ${aviso.ok ? 'text-ok' : 'text-error'}`}>
+            {aviso.ok && <span className={`${rotulo} mr-2`}>Enviado</span>}
             {aviso.texto}
           </p>
         )}
@@ -96,7 +97,7 @@ export function EscanerPage() {
       <section className="min-h-0 flex-1 overflow-y-auto border-t border-linea bg-panel p-4">
         <div className="mb-2 flex items-baseline justify-between">
           <h2 className="font-semibold">Venta en la caja</h2>
-          <span className="font-display text-2xl font-semibold tabular-nums">{formatearPesosCorto(venta?.total ?? 0)}</span>
+          <span className="font-display text-2xl font-semibold tracking-tight tabular-nums">{formatearPesosCorto(venta?.total ?? 0)}</span>
         </div>
         {venta && venta.items.length > 0 ? (
           <ul className="divide-y divide-linea">

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { formatearCantidad, parsearCantidad } from '../../lib/cantidad'
-import { botonPrimario } from '../../lib/estilos'
+import { botonPrimario, claseInput } from '../../lib/estilos'
 import type { MovimientoStockCrear, Producto } from '../../lib/modelos'
 import { moverStock } from '../../lib/productos'
 
@@ -29,24 +29,24 @@ export function AjusteStock({ producto }: { producto: Producto }) {
   }
 
   return (
-    <section className="space-y-3 rounded-2xl bg-elevado p-4">
-      <div className="flex items-baseline justify-between">
+    <section className="space-y-2 border-b border-linea pb-4">
+      <div className="flex items-baseline gap-3">
         <span className="text-sm text-tenue">Stock</span>
-        <span className={`font-display text-3xl font-semibold tabular-nums ${bajo ? 'text-ambar' : ''}`}>{formatearCantidad(producto.stock, producto.unidad)}</span>
+        <span className={`font-display text-3xl font-semibold tracking-tight tabular-nums ${bajo ? 'text-ambar' : ''}`}>{formatearCantidad(producto.stock, producto.unidad)}</span>
       </div>
       {bajo && producto.stock_minimo > 0 && (
         <p className="text-xs text-tinta-suave">Por debajo del mínimo de {formatearCantidad(producto.stock_minimo, producto.unidad)}</p>
       )}
 
-      <div className="grid grid-cols-3 gap-1.5">
+      <div className="flex gap-6">
         {ACCIONES.map((a) => (
           <button
             key={a.motivo}
             type="button"
             onClick={() => setMotivo(motivo === a.motivo ? null : a.motivo)}
             aria-pressed={motivo === a.motivo}
-            className={`rounded-xl py-2 text-sm font-semibold ${
-              motivo === a.motivo ? 'bg-tinta text-fondo' : a.motivo === 'compra' ? 'bg-salvia text-fondo' : 'border border-borde hover:bg-borde'
+            className={`h-10 text-sm font-semibold ${
+              motivo === a.motivo ? 'text-tinta shadow-[inset_0_-2px_0_var(--color-ambar)]' : a.motivo === 'compra' ? 'text-ok' : 'text-tinta-suave hover:text-tinta'
             }`}
           >
             {a.boton}
@@ -63,7 +63,7 @@ export function AjusteStock({ producto }: { producto: Producto }) {
             placeholder={accion.pregunta}
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            className="min-w-0 flex-1 rounded-xl border border-borde bg-fondo px-3 py-2 outline-none placeholder:text-apagado focus:border-ambar"
+            className={claseInput()}
           />
           <button type="submit" disabled={cantidad === null} className={`${botonPrimario} px-4`}>
             OK

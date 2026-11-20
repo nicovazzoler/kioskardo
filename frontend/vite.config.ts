@@ -19,8 +19,8 @@ export default defineConfig(({ mode }) => ({
         short_name: 'Kioskardo',
         description: 'Punto de venta para kioscos',
         lang: 'es-AR',
-        theme_color: '#1c1916',
-        background_color: '#1c1916',
+        theme_color: '#0f1626',
+        background_color: '#0f1626',
         display: 'standalone',
         start_url: '/',
         // Aparecen al mantener apretado el ícono de la app instalada (Android).

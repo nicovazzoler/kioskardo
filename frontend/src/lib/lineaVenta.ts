@@ -12,6 +12,6 @@ export function describirLinea(item: Linea, producto: Producto | undefined) {
     ? 'Monto libre'
     : !producto || producto.precio_libre
       ? 'Precio libre'
-      : `${item.cantidad} × ${formatearPesosCorto(item.precio_unitario)}`
-  return { cantidad: String(item.cantidad), detalle }
+      : `${formatearPesosCorto(item.precio_unitario)} c/u`
+  return { cantidad: `${item.cantidad} ×`, detalle }
 }

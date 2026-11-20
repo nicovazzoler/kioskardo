@@ -59,14 +59,14 @@ export function VueltoOpcional({ total, recibido, alCambiar }: Props) {
       {otro && <InputPesos autoFocus valor={texto} alCambiar={escribir} placeholder="¿Con cuánto paga?" aria-label="Con cuánto paga" />}
 
       {recibido !== null && (
-        <div className="flex items-center justify-between rounded-xl bg-elevado px-3 py-2">
+        <div className="flex items-baseline gap-3">
           <span className="text-sm">Vuelto</span>
           {recibido >= total ? (
-            <span className="font-display text-2xl font-semibold text-salvia tabular-nums">{formatearPesosCorto(recibido - total)}</span>
+            <span className="font-display text-2xl font-semibold tracking-tight text-salvia tabular-nums">{formatearPesosCorto(recibido - total)}</span>
           ) : (
             <span className="text-sm font-semibold text-error">No alcanza</span>
           )}
-          <button type="button" onClick={limpiar} className="text-xs text-tenue underline">
+          <button type="button" onClick={limpiar} className="ml-auto text-xs text-tenue underline hover:text-tinta">
             Quitar
           </button>
         </div>
